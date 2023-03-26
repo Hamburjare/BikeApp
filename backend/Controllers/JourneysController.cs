@@ -20,34 +20,46 @@ namespace Backend_BikeApp.Controllers
         {
             // Get the parameters from the query string
             var page = Request.Query["page"];
-            return await JourneyService.GetJourneysAsync(page);
+            try
+            {
+                var response = await JourneyService.GetJourneysAsync(page);
+                if (response != null)
+                {
+                    return response;
+                }
+                else
+                {
+                    return null!;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null!;
+            }
         }
 
         // GET: api/Journeys/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Journey>> GetJourney(int id)
         {
-            await using var connection = new MySqlConnection(MySQLHelper.connectionString);
-            await connection.OpenAsync();
-            using var cmd = new MySqlCommand("SELECT * FROM Journeys WHERE Id = @id", connection);
-            cmd.Parameters.AddWithValue("@id", id);
-            using var reader = await cmd.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
+            try
             {
-                return new Journey
+                var response = await JourneyService.GetJourneyAsync(id);
+                if (response != null)
                 {
-                    Id = reader.GetInt32("Id"),
-                    DepartureTime = reader.GetDateTime("DepartureTime"),
-                    ReturnTime = reader.GetDateTime("ReturnTime"),
-                    DepartureStationId = reader.GetString("DepartureStationId"),
-                    DepartureStationName = reader.GetString("DepartureStationName"),
-                    ReturnStationId = reader.GetString("ReturnStationId"),
-                    ReturnStationName = reader.GetString("ReturnStationName"),
-                    CoveredDistance = reader.GetInt32("CoveredDistance"),
-                    Duration = reader.GetInt32("Duration")
-                };
+                    return response;
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null!;
+            }
         }
 
         // PUT: api/Journeys/5
@@ -59,23 +71,16 @@ namespace Backend_BikeApp.Controllers
             {
                 return BadRequest();
             }
-            await using var connection = new MySqlConnection(MySQLHelper.connectionString);
-            await connection.OpenAsync();
-            using var cmd = new MySqlCommand(
-                "UPDATE Journeys SET DepartureTime = @departureTime, ReturnTime = @returnTime, DepartureStationId = @departureStationId, DepartureStationName = @departureStationName, ReturnStationId = @returnStationId, ReturnStationName = @returnStationName, CoveredDistance = @coveredDistance, Duration = @duration WHERE Id = @id",
-                connection
-            );
-            cmd.Parameters.AddWithValue("@id", id);
-            cmd.Parameters.AddWithValue("@departureTime", journey.DepartureTime);
-            cmd.Parameters.AddWithValue("@returnTime", journey.ReturnTime);
-            cmd.Parameters.AddWithValue("@departureStationId", journey.DepartureStationId);
-            cmd.Parameters.AddWithValue("@departureStationName", journey.DepartureStationName);
-            cmd.Parameters.AddWithValue("@returnStationId", journey.ReturnStationId);
-            cmd.Parameters.AddWithValue("@returnStationName", journey.ReturnStationName);
-            cmd.Parameters.AddWithValue("@coveredDistance", journey.CoveredDistance);
-            cmd.Parameters.AddWithValue("@duration", journey.Duration);
-            await cmd.ExecuteNonQueryAsync();
-            return NoContent();
+            try
+            {
+                await JourneyService.PutJourneyAsync(id, journey);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null!;
+            }
         }
 
         // POST: api/Journeys
@@ -83,34 +88,31 @@ namespace Backend_BikeApp.Controllers
         [HttpPost]
         public async Task<ActionResult<Journey>> PostJourney(Journey journey)
         {
-            await using var connection = new MySqlConnection(MySQLHelper.connectionString);
-            await connection.OpenAsync();
-            using var cmd = new MySqlCommand(
-                "INSERT INTO Journeys (DepartureTime, ReturnTime, DepartureStationId, DepartureStationName, ReturnStationId, ReturnStationName, CoveredDistance, Duration) VALUES (@departureTime, @returnTime, @departureStationId, @departureStationName, @returnStationId, @returnStationName, @coveredDistance, @duration)",
-                connection
-            );
-            cmd.Parameters.AddWithValue("@departureTime", journey.DepartureTime);
-            cmd.Parameters.AddWithValue("@returnTime", journey.ReturnTime);
-            cmd.Parameters.AddWithValue("@departureStationId", journey.DepartureStationId);
-            cmd.Parameters.AddWithValue("@departureStationName", journey.DepartureStationName);
-            cmd.Parameters.AddWithValue("@returnStationId", journey.ReturnStationId);
-            cmd.Parameters.AddWithValue("@returnStationName", journey.ReturnStationName);
-            cmd.Parameters.AddWithValue("@coveredDistance", journey.CoveredDistance);
-            cmd.Parameters.AddWithValue("@duration", journey.Duration);
-            await cmd.ExecuteNonQueryAsync();
-            return CreatedAtAction("GetJourney", new { id = journey.Id }, journey);
+            try
+            {
+                await JourneyService.PostJourneyAsync(journey);
+                return CreatedAtAction("GetJourney", new { id = journey.Id }, journey);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null!;
+            }
         }
 
         // DELETE: api/Journeys/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteJourney(int id)
         {
-            await using var connection = new MySqlConnection(MySQLHelper.connectionString);
-            await connection.OpenAsync();
-            using var cmd = new MySqlCommand("DELETE FROM Journeys WHERE Id = @id", connection);
-            cmd.Parameters.AddWithValue("@id", id);
-            await cmd.ExecuteNonQueryAsync();
-            return NoContent();
+            try {
+                await JourneyService.DeleteJourneyAsync(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null!;
+            }
         }
 
         private bool JourneyExists(int id)
