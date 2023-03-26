@@ -1,3 +1,5 @@
+using Backend_BikeApp.Models;
+using Backend_BikeApp.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +8,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+MySQLHelper.connectionString = builder.Configuration["MySQL:ConnectionString"];
 
 var app = builder.Build();
 
