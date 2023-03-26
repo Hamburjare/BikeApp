@@ -14,7 +14,12 @@ public class JourneyService {
         List<Journey> journeys = new List<Journey>();
         using var conn = new MySqlConnection(MySQLHelper.connectionString); {
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM Journeys LIMIT 10 OFFSET {Convert.ToInt32(page) * 10}", conn);
+            if (page == null || !int.TryParse(page, out int pageNo) || pageNo < 0)
+            {
+                pageNo = 0;
+            }
+
+            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM Journeys LIMIT 10 OFFSET {pageNo * 10}", conn);
             using (MySqlDataReader reader = await cmd.ExecuteReaderAsync()) {
                 while (await reader.ReadAsync()) {
                     Journey journey = new Journey {
