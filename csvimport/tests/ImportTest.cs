@@ -8,12 +8,20 @@ public class ImportTest : ImportData
     public override string journeysDBTableName { get; set; } = "JourneysTest";
     public override string stationsDBTableName { get; set; } = "StationsTest";
 
+    /// <summary>
+    /// It deletes all the test tables in the database.
+    /// </summary>
     public void DeleteTables() {
         using MySqlConnection connection = new MySqlConnection(connectionString);
         connection.Open();
         using MySqlCommand command = new MySqlCommand("DROP TABLE IF EXISTS JourneysTest; DROP TABLE IF EXISTS StationsTest;", connection);
         command.ExecuteNonQuery();
     }
+
+    /// <summary>
+    /// Gets the number of rows in a table.
+    /// </summary>
+    /// <param name="name">The name of the table.</param>
 
     public void GetTableRowCount(string name) 
     {
@@ -52,6 +60,11 @@ public class ImportTest : ImportData
         }
         
     }
+
+    /// <summary>
+    /// It creates a table in the database.
+    /// </summary>
+    /// <returns>True if the table is created successfully, false otherwise.</returns>
 
     public override bool CreateTable()
     {
