@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Backend_BikeApp.Models;
 using Backend_BikeApp.Services;
-using MySqlConnector;
 
 namespace Backend_BikeApp.Controllers
 {

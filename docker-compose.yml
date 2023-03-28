@@ -12,6 +12,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: Abc123
       MYSQL_DATABASE: bikeapp
+    restart: unless-stopped
     ports:
       - '3306:3306'
     volumes:

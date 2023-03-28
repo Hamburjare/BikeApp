@@ -1,6 +1,4 @@
 namespace Backend_BikeApp.Models;
-using CsvHelper.Configuration;
-using CsvHelper.Configuration.Attributes;
 
 public class Journey
 {
