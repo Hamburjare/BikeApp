@@ -50,10 +50,10 @@ Focus on the recommended features. For extra points, you might want to also comp
 
 #### Recommended
 
-* Import data from the CSV files to a database or in-memory storage
-* Validate data before importing
-* Don't import journeys that lasted for less than ten seconds
-* Don't import journeys that covered distances shorter than 10 meters
+* [x] Import data from the CSV files to a database or in-memory storage
+* [x] Validate data before importing
+* [x] Don't import journeys that lasted for less than ten seconds
+* [x] Don't import journeys that covered distances shorter than 10 meters
 
 ### Journey list view
 
