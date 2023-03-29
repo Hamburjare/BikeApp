@@ -298,7 +298,9 @@ public class ImportData
 
         // Check if longitude and latitude are valid
         if (
-            !double.TryParse(record.Longitude, out double number1)
+            !int.TryParse(record.FID.ToString(), out int number)
+            || !int.TryParse(record.Capacity.ToString(), out number)
+            || !double.TryParse(record.Longitude, out double number1)
             || !double.TryParse(record.Latitude, out number1)
             || Convert.ToDouble(record.Longitude) < -180
             || Convert.ToDouble(record.Longitude) > 180
