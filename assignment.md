@@ -66,7 +66,7 @@ Focus on the recommended features. For extra points, you might want to also comp
 #### Additional
 
 * [x] Pagination
-* Ordering per column
+* [x] Ordering per column
 * [x] Searching
 * Filtering
 

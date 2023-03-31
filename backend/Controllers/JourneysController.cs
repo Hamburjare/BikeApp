@@ -20,9 +20,10 @@ namespace Backend_BikeApp.Controllers
             // Get the parameters from the query string
             var page = Request.Query["page"];
             var search = Request.Query["search"];
+            var orderBy = Request.Query["orderBy"];
             try
             {
-                var response = await JourneyService.GetJourneysAsync(page!, search!);
+                var response = await JourneyService.GetJourneysAsync(page!, search!, orderBy!);
                 if (response != null)
                 {
                     return response;

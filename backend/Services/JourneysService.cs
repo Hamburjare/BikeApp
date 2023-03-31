@@ -12,7 +12,10 @@ public class JourneyService
     /// <param name="page">The page number to return.</param>
     public static async Task<ActionResult<IEnumerable<Journey>>> GetJourneysAsync(
         string page,
-        string search
+        string search,
+        string orderBy
+
+
     )
     {
         List<Journey> journeys = new List<Journey>();
@@ -30,6 +33,11 @@ public class JourneyService
             {
                 query =
                     $"SELECT * FROM Journeys WHERE DepartureStationName LIKE '%{search}%' OR ReturnStationName LIKE '%{search}%' OR DepartureTime LIKE '%{search}%' OR ReturnTime LIKE '%{search}%' OR CoveredDistance LIKE '%{search}%' OR Duration LIKE '%{search}%' OR Id LIKE '%{search}%' OR DepartureStationId LIKE '%{search}%' OR ReturnStationId LIKE '%{search}%'";
+            }
+
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                query += $"ORDER BY {orderBy}";
             }
 
             query += $" LIMIT 10 OFFSET {pageNo * 10}";
