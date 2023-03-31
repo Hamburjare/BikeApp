@@ -19,22 +19,23 @@ namespace Backend_BikeApp.Controllers
         {
             // Get the parameters from the query string
             var page = Request.Query["page"];
+            var search = Request.Query["search"];
             try
             {
-                var response = await JourneyService.GetJourneysAsync(page);
+                var response = await JourneyService.GetJourneysAsync(page!, search!);
                 if (response != null)
                 {
                     return response;
                 }
                 else
                 {
-                    return null!;
+                    return NotFound();
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return null!;
+                return BadRequest(ex.Message);
             }
         }
 
@@ -57,18 +58,18 @@ namespace Backend_BikeApp.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return null!;
+                return BadRequest(ex.Message);
             }
         }
 
         // PUT: api/Journeys/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutJourney(int id, Journey journey)
+        public async Task<IActionResult> PutJourneyAsync(int id, Journey journey)
         {
             if (id != journey.Id)
             {
-                return BadRequest();
+                return BadRequest("Id mismatch");
             }
             try
             {
@@ -78,7 +79,7 @@ namespace Backend_BikeApp.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return null!;
+                return BadRequest(ex.Message);
             }
         }
 
@@ -95,7 +96,7 @@ namespace Backend_BikeApp.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return null!;
+                return BadRequest(ex.Message);
             }
         }
 
@@ -110,7 +111,7 @@ namespace Backend_BikeApp.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return null!;
+                return BadRequest(ex.Message);
             }
         }
 
