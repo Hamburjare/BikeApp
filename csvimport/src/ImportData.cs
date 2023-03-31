@@ -294,7 +294,7 @@ public class ImportData
                 record.Operator = "CityBike Finland";
             }
         }
-        catch (Exception ex) { }
+        catch { }
 
         // Check if longitude and latitude are valid
         if (

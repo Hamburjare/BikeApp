@@ -18,22 +18,23 @@ namespace Backend_BikeApp.Controllers
         {
             // Get the parameters from the query string
             var page = Request.Query["page"];
+            var search = Request.Query["search"];
             try
             {
-                var response = await StationService.GetStationsAsync(page);
+                var response = await StationService.GetStationsAsync(page!, search!);
                 if (response != null)
                 {
                     return response;
                 }
                 else
                 {
-                    return null!;
+                    return NotFound();
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return null!;
+                return BadRequest(ex.Message);
             }
         }
 
@@ -56,8 +57,68 @@ namespace Backend_BikeApp.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return null!;
+                return BadRequest(ex.Message);
             }
         }
+
+
+        // PUT: api/Stations
+        [HttpPut]
+        public async Task<IActionResult> PutStation(int id, Station station)
+        {
+            if (id != station.FID)
+            {
+                return BadRequest("Id mismatch");
+            }
+            try {
+                await StationService.PutStationAsync(id, station);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // POST: api/Stations
+        [HttpPost]
+        public async Task<ActionResult<Station>> PostStation(Station station)
+        {
+            try
+            {
+                var response = await StationService.PostStationAsync(station);
+                if (response != null)
+                {
+                    return CreatedAtAction("GetStation", new { id = station.FID }, station);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // DELETE: api/Stations/5
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<Station>> DeleteStation(int id)
+        {
+            try
+            {
+                await StationService.DeleteStationAsync(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return BadRequest(ex.Message);
+            }
+        }
+        
     }
 }

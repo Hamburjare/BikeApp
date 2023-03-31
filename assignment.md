@@ -67,19 +67,19 @@ Focus on the recommended features. For extra points, you might want to also comp
 
 * [x] Pagination
 * Ordering per column
-* Searching
+* [x] Searching
 * Filtering
 
 ### Station list
 
 #### Recommended
 
-* List all the stations
+* [x] List all the stations
 
 #### Additional
 
-* Pagination
-* Searching
+* [x] Pagination
+* [x] Searching
 
 ### Single station view
 
