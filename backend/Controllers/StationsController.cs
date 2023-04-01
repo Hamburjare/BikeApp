@@ -17,11 +17,12 @@ namespace Backend_BikeApp.Controllers
         public async Task<ActionResult<IEnumerable<Station>>> GetStationItems()
         {
             // Get the parameters from the query string
-            var page = Request.Query["page"];
-            var search = Request.Query["search"];
+            string? page = Request.Query["page"];
+            string? limit = Request.Query["limit"];
+            string? search = Request.Query["search"];
             try
             {
-                var response = await StationService.GetStationsAsync(page!, search!);
+                var response = await StationService.GetStationsAsync(page!, search!, limit!);
                 if (response != null)
                 {
                     return response;
