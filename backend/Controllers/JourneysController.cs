@@ -15,31 +15,28 @@ namespace Backend_BikeApp.Controllers
     {
         // GET: api/Journeys
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Journey>>> GetJourneyItems()
+        public async Task<ActionResult<IEnumerable<Journey>>> GetJourneyItems(int? page,
+            int? limit,
+            string? search,
+            string? orderBy,
+            string? orderDir,
+            int? durationMin,
+            int? durationMax,
+            int? distanceMin,
+            int? distanceMax)
         {
-            // Get the parameters from the query string
-            var page = Request.Query["page"];
-            var limit = Request.Query["limit"];
-            var search = Request.Query["search"];
-            var orderBy = Request.Query["orderBy"];
-            var orderDir = Request.Query["orderDir"];
-            var durationMin = Request.Query["durationMin"];
-            var durationMax = Request.Query["durationMax"];
-            var distanceMin = Request.Query["distanceMin"];
-            var distanceMax = Request.Query["distanceMax"];
-
             try
             {
                 var response = await JourneyService.GetJourneysAsync(
-                    page!,
+                    page.ToString()!,
                     search!,
                     orderBy!,
-                    limit!,
+                    limit.ToString()!,
                     orderDir!,
-                    durationMin!,
-                    durationMax!,
-                    distanceMin!,
-                    distanceMax!
+                    durationMin.ToString()!,
+                    durationMax.ToString()!,
+                    distanceMin.ToString()!,
+                    distanceMax.ToString()!
                 );
                 if (response != null)
                 {
@@ -56,6 +53,8 @@ namespace Backend_BikeApp.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        
 
         // GET: api/Journeys/5
         [HttpGet("{id}")]
@@ -108,8 +107,15 @@ namespace Backend_BikeApp.Controllers
         {
             try
             {
-                await JourneyService.PostJourneyAsync(journey);
-                return CreatedAtAction("GetJourney", new { id = journey.Id }, journey);
+                var response = await JourneyService.PostJourneyAsync(journey);
+                if (response != null)
+                {
+                    return response;
+                }
+                else
+                {
+                    return BadRequest();
+                }
             }
             catch (Exception ex)
             {

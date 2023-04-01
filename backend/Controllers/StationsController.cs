@@ -14,15 +14,15 @@ namespace Backend_BikeApp.Controllers
     public class StationsController : ControllerBase {
         // GET: api/Stations
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Station>>> GetStationItems()
+        public async Task<ActionResult<IEnumerable<Station>>> GetStationItems(
+            int? page,
+            int? limit,
+            string? search
+        )
         {
-            // Get the parameters from the query string
-            string? page = Request.Query["page"];
-            string? limit = Request.Query["limit"];
-            string? search = Request.Query["search"];
             try
             {
-                var response = await StationService.GetStationsAsync(page!, search!, limit!);
+                var response = await StationService.GetStationsAsync(page.ToString()!, search!, limit.ToString()!);
                 if (response != null)
                 {
                     return response;
@@ -41,11 +41,11 @@ namespace Backend_BikeApp.Controllers
 
         // GET: api/Stations/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Station>> GetStation(int id)
+        public async Task<ActionResult<Station>> GetStation(int id, string? month)
         {
             try
             {
-                var response = await StationService.GetStationAsync(id);
+                var response = await StationService.GetStationAsync(id, month!);
                 if (response != null)
                 {
                     return response;
@@ -72,8 +72,15 @@ namespace Backend_BikeApp.Controllers
                 return BadRequest("Id mismatch");
             }
             try {
-                await StationService.PutStationAsync(id, station);
-                return NoContent();
+                var response = await StationService.PutStationAsync(id, station);
+                if (response != null)
+                {
+                    return response;
+                }
+                else
+                {
+                    return BadRequest();
+                }
             }
             catch (Exception ex)
             {
@@ -95,7 +102,7 @@ namespace Backend_BikeApp.Controllers
                 }
                 else
                 {
-                    return NotFound();
+                    return BadRequest();
                 }
             }
             catch (Exception ex)

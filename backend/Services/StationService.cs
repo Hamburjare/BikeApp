@@ -6,6 +6,47 @@ namespace Backend_BikeApp.Services;
 
 public class StationService
 {
+    static List<string> ReturnStationIds()
+    {
+        using var conn = new MySqlConnection(MySQLHelper.connectionString);
+        try
+        {
+            conn.Open();
+        }
+        catch (MySqlException ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"SELECT ID FROM Stations;";
+        using var reader = cmd.ExecuteReader();
+        var ids = new List<string>();
+        while (reader.Read())
+        {
+            ids.Add(reader.GetString(0));
+        }
+        return ids;
+    }
+
+    static bool ValidateStation(Station record)
+    {
+        if (
+            !int.TryParse(record.FID.ToString(), out int number)
+            || !int.TryParse(record.Capacity.ToString(), out number)
+            || !double.TryParse(record.Longitude, out double number1)
+            || !double.TryParse(record.Latitude, out number1)
+            || Convert.ToDouble(record.Longitude) < -180
+            || Convert.ToDouble(record.Longitude) > 180
+            || Convert.ToDouble(record.Latitude) < -90
+            || Convert.ToDouble(record.Latitude) > 90
+        )
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     /// <summary>
     /// It returns a list of stations, and it's asynchronous
     /// </summary>
@@ -48,7 +89,6 @@ public class StationService
             string totalPageQuery = query.Replace("*", "COUNT(*)");
 
             query += $" LIMIT {limitNo} OFFSET {pageNo * limitNo}";
-
 
             MySqlCommand cmd = new MySqlCommand(query, conn);
             using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
@@ -94,11 +134,7 @@ public class StationService
         if (stations.Count == 0)
             return new NotFoundResult();
 
-        return new OkObjectResult(new
-        {
-            stations,
-            totalPages
-        });
+        return new OkObjectResult(new { stations, totalPages });
     }
 
     /// <summary>
@@ -106,10 +142,46 @@ public class StationService
     /// </summary>
     /// <param name="id">The id of the station to return.</param>
 
-    public static async Task<ActionResult<Station>> GetStationAsync(int id)
+    public static async Task<ActionResult<Station>> GetStationAsync(int id, string month)
     {
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
+            // if month is not null, then convert it to number
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                string[] months = new string[]
+                {
+                    "january",
+                    "february",
+                    "march",
+                    "april",
+                    "may",
+                    "june",
+                    "july",
+                    "august",
+                    "september",
+                    "october",
+                    "november",
+                    "december"
+                };
+                for (int i = 0; i < months.Length; i++)
+                {
+                    if (months[i] == month.ToLower())
+                    {
+                        month = (i + 1).ToString();
+                    }
+                }
+            }
+
+            Station station = null!;
+            int departureJourneys = 0;
+            int returnJourneys = 0;
+            float avarageDepartureDistance = 0;
+            float avarageReturnDistance = 0;
+            List<string> top5DepartureStations = new List<string>();
+            List<string> top5ReturnStations = new List<string>();
+
             conn.Open();
             MySqlCommand cmd = new MySqlCommand("SELECT * FROM Stations WHERE ID = @id", conn);
             cmd.Parameters.AddWithValue("@id", id);
@@ -117,7 +189,7 @@ public class StationService
             {
                 if (await reader.ReadAsync())
                 {
-                    return new Station
+                    station = new Station
                     {
                         FID = reader.GetInt32("FID"),
                         ID = reader.GetString("ID"),
@@ -135,14 +207,178 @@ public class StationService
                     };
                 }
             }
+
+            // if station is null, then return not found
+            if (station == null)
+                return new NotFoundResult();
+
+            // get number of journeys from this station
+            string query = "SELECT COUNT(*) FROM Journeys WHERE DepartureStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        departureJourneys = 0;
+                    else
+                        departureJourneys = reader.GetInt32(0);
+                }
+            }
+
+            // Get number of journeys to this station
+            query = "SELECT COUNT(*) FROM Journeys WHERE ReturnStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        returnJourneys = 0;
+                    else
+                        returnJourneys = reader.GetInt32(0);
+                }
+            }
+
+            // Get avarage distance of journeys from this station
+            query = "SELECT AVG(CoveredDistance) FROM Journeys WHERE DepartureStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        avarageDepartureDistance = 0;
+                    else
+                        avarageDepartureDistance = reader.GetFloat(0);
+                }
+            }
+
+            // Get avarage distance of journeys to this station
+            query = "SELECT AVG(CoveredDistance) FROM Journeys WHERE ReturnStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        avarageReturnDistance = 0;
+                    else
+                        avarageReturnDistance = reader.GetFloat(0);
+                }
+            }
+
+            // Get Top 5 most popular departure stations for journeys ending at the station
+            query =
+                "SELECT Stations.NameFIN, COUNT(*) AS count FROM Journeys INNER JOIN Stations ON Journeys.DepartureStationId = Stations.ID WHERE Journeys.ReturnStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            query += " GROUP BY Journeys.DepartureStationId ORDER BY count DESC LIMIT 5";
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        continue;
+                    top5DepartureStations.Add(reader.GetString(0));
+                }
+            }
+
+            // Get Top 5 most popular return stations for journeys starting from the station
+            query =
+                "SELECT Stations.NameFIN, COUNT(*) AS count FROM Journeys INNER JOIN Stations ON Journeys.ReturnStationId = Stations.ID WHERE Journeys.DepartureStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            query += " GROUP BY Journeys.ReturnStationId ORDER BY count DESC LIMIT 5";
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        continue;
+                    top5ReturnStations.Add(reader.GetString(0));
+                }
+            }
+
             conn.Close();
+
+            return new OkObjectResult(
+                new
+                {
+                    station,
+                    departureJourneys,
+                    returnJourneys,
+                    avarageDepartureDistance,
+                    avarageReturnDistance,
+                    top5DepartureStations,
+                    top5ReturnStations
+                }
+            );
         }
-        return new NotFoundResult();
     }
 
     public static async Task<IActionResult> PutStationAsync(int id, Station station)
     {
         if (id != station.FID)
+        {
+            return new BadRequestResult();
+        }
+
+        if (ValidateStation(station) == false)
         {
             return new BadRequestResult();
         }
@@ -175,13 +411,36 @@ public class StationService
 
     public static async Task<ActionResult<Station>> PostStationAsync(Station station)
     {
+        List<string> ids = ReturnStationIds();
+        if (ids.Contains(station.ID!.ToString()))
+        {
+            return null!;
+        }
+
+        if (ValidateStation(station) == false)
+            return null!;
+
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand(
-                "INSERT INTO Stations (ID, NameFIN, NameSWE, NameENG, AddressFIN, AddressSWE, CityFIN, CitySWE, Operator, Capacity, Longitude, Latitude) VALUES (@ID, @NameFIN, @NameSWE, @NameENG, @AddressFIN, @AddressSWE, @CityFIN, @CitySWE, @Operator, @Capacity, @Longitude, @Latitude)",
+
+            MySqlCommand lastId = new MySqlCommand(
+                "SELECT FID FROM Stations ORDER BY FID DESC LIMIT 1",
                 conn
             );
+
+            using (MySqlDataReader reader = await lastId.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    station.FID = reader.GetInt32("FID") + 1;
+                }
+            }
+            MySqlCommand cmd = new MySqlCommand(
+                "INSERT INTO Stations (FID, ID, NameFIN, NameSWE, NameENG, AddressFIN, AddressSWE, CityFIN, CitySWE, Operator, Capacity, Longitude, Latitude) VALUES (@FID, @ID, @NameFIN, @NameSWE, @NameENG, @AddressFIN, @AddressSWE, @CityFIN, @CitySWE, @Operator, @Capacity, @Longitude, @Latitude)",
+                conn
+            );
+            cmd.Parameters.AddWithValue("@FID", station.FID);
             cmd.Parameters.AddWithValue("@ID", station.ID);
             cmd.Parameters.AddWithValue("@NameFIN", station.NameFIN);
             cmd.Parameters.AddWithValue("@NameSWE", station.NameSWE);

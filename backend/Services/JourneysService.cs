@@ -6,6 +6,57 @@ namespace Backend_BikeApp.Services;
 
 public class JourneyService
 {
+    static List<string> ReturnStationIds()
+    {
+        using var conn = new MySqlConnection(MySQLHelper.connectionString);
+        try
+        {
+            conn.Open();
+        }
+        catch (MySqlException ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"SELECT ID FROM Stations;";
+        using var reader = cmd.ExecuteReader();
+        var ids = new List<string>();
+        while (reader.Read())
+        {
+            ids.Add(reader.GetString(0));
+        }
+        return ids;
+    }
+
+    static bool ValidateJourney(Journey record)
+    {
+        List<string> ids = ReturnStationIds();
+
+        if (!ids.Contains(record.DepartureStationId!) && !ids.Contains(record.ReturnStationId!))
+        {
+            return false;
+        }
+
+        if (
+            !int.TryParse(record.CoveredDistance.ToString(), out int number)
+            || !int.TryParse(record.Duration.ToString(), out number)
+            || Convert.ToInt32(record.Duration) < 10
+            || Convert.ToInt32(record.CoveredDistance) < 10
+            || record.DepartureTime == default
+            || record.ReturnTime == default
+            || record.ReturnTime < record.DepartureTime
+            || Convert.ToInt32(record.DepartureStationId) < 0
+            || Convert.ToInt32(record.ReturnStationId) < 0
+            || Convert.ToInt32(record.CoveredDistance) < 0
+            || Convert.ToInt32(record.Duration) < 0
+        )
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     /// <summary>
     /// It returns a list of journeys, and it's asynchronous
     /// </summary>
@@ -251,6 +302,12 @@ public class JourneyService
         {
             return new BadRequestResult();
         }
+
+        if (ValidateJourney(journey) == false)
+        {
+            return new BadRequestResult();
+        }
+
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
             conn.Open();
@@ -281,13 +338,30 @@ public class JourneyService
     /// database.</param>
     public static async Task<ActionResult<Journey>> PostJourneyAsync(Journey journey)
     {
+        if (ValidateJourney(journey) == false)
+            return null!;
+
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand(
-                "INSERT INTO Journeys (DepartureTime, ReturnTime, DepartureStationId, DepartureStationName, ReturnStationId, ReturnStationName, CoveredDistance, Duration) VALUES (@departureTime, @returnTime, @departureStationId, @departureStationName, @returnStationId, @returnStationName, @coveredDistance, @duration)",
+            MySqlCommand lastId = new MySqlCommand(
+                "SELECT Id FROM Journeys ORDER BY Id DESC LIMIT 1",
                 conn
             );
+
+            using (MySqlDataReader reader = await lastId.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    journey.Id = reader.GetInt32("Id") + 1;
+                }
+            }
+
+            MySqlCommand cmd = new MySqlCommand(
+                "INSERT INTO Journeys (Id, DepartureTime, ReturnTime, DepartureStationId, DepartureStationName, ReturnStationId, ReturnStationName, CoveredDistance, Duration) VALUES (@id, @departureTime, @returnTime, @departureStationId, @departureStationName, @returnStationId, @returnStationName, @coveredDistance, @duration)",
+                conn
+            );
+            cmd.Parameters.AddWithValue("@id", journey.Id);
             cmd.Parameters.AddWithValue("@departureTime", journey.DepartureTime);
             cmd.Parameters.AddWithValue("@returnTime", journey.ReturnTime);
             cmd.Parameters.AddWithValue("@departureStationId", journey.DepartureStationId);
