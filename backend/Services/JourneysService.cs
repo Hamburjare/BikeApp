@@ -6,7 +6,6 @@ namespace Backend_BikeApp.Services;
 
 public class JourneyService
 {
-
     static List<string> ReturnStationIds()
     {
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
@@ -29,14 +28,14 @@ public class JourneyService
         return ids;
     }
 
-    static bool ValidateJourney(Journey record) {
+    static bool ValidateJourney(Journey record)
+    {
         List<string> ids = ReturnStationIds();
 
         if (!ids.Contains(record.DepartureStationId!) && !ids.Contains(record.ReturnStationId!))
         {
             return false;
         }
-
 
         if (
             !int.TryParse(record.CoveredDistance.ToString(), out int number)
@@ -56,9 +55,6 @@ public class JourneyService
         }
 
         return true;
-
-        
-
     }
 
     /// <summary>
@@ -343,7 +339,7 @@ public class JourneyService
     public static async Task<ActionResult<Journey>> PostJourneyAsync(Journey journey)
     {
         if (ValidateJourney(journey) == false)
-            return null !;
+            return null!;
 
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {

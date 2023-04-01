@@ -12,6 +12,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 MySQLHelper.connectionString = builder.Configuration["MySQL:ConnectionString"];
 
+builder.Services.AddControllers(
+options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
