@@ -41,11 +41,11 @@ namespace Backend_BikeApp.Controllers
 
         // GET: api/Stations/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Station>> GetStation(int id)
+        public async Task<ActionResult<Station>> GetStation(int id, string? month)
         {
             try
             {
-                var response = await StationService.GetStationAsync(id);
+                var response = await StationService.GetStationAsync(id, month!);
                 if (response != null)
                 {
                     return response;

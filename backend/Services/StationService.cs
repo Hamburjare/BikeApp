@@ -6,7 +6,6 @@ namespace Backend_BikeApp.Services;
 
 public class StationService
 {
-
     static List<string> ReturnStationIds()
     {
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
@@ -29,8 +28,8 @@ public class StationService
         return ids;
     }
 
-    static bool ValidateStation(Station record) {
-
+    static bool ValidateStation(Station record)
+    {
         if (
             !int.TryParse(record.FID.ToString(), out int number)
             || !int.TryParse(record.Capacity.ToString(), out number)
@@ -91,7 +90,6 @@ public class StationService
 
             query += $" LIMIT {limitNo} OFFSET {pageNo * limitNo}";
 
-
             MySqlCommand cmd = new MySqlCommand(query, conn);
             using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
             {
@@ -136,11 +134,7 @@ public class StationService
         if (stations.Count == 0)
             return new NotFoundResult();
 
-        return new OkObjectResult(new
-        {
-            stations,
-            totalPages
-        });
+        return new OkObjectResult(new { stations, totalPages });
     }
 
     /// <summary>
@@ -148,10 +142,46 @@ public class StationService
     /// </summary>
     /// <param name="id">The id of the station to return.</param>
 
-    public static async Task<ActionResult<Station>> GetStationAsync(int id)
+    public static async Task<ActionResult<Station>> GetStationAsync(int id, string month)
     {
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
+            // if month is not null, then convert it to number
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                string[] months = new string[]
+                {
+                    "january",
+                    "february",
+                    "march",
+                    "april",
+                    "may",
+                    "june",
+                    "july",
+                    "august",
+                    "september",
+                    "october",
+                    "november",
+                    "december"
+                };
+                for (int i = 0; i < months.Length; i++)
+                {
+                    if (months[i] == month.ToLower())
+                    {
+                        month = (i + 1).ToString();
+                    }
+                }
+            }
+
+            Station station = null!;
+            int departureJourneys = 0;
+            int returnJourneys = 0;
+            float avarageDepartureDistance = 0;
+            float avarageReturnDistance = 0;
+            List<string> top5DepartureStations = new List<string>();
+            List<string> top5ReturnStations = new List<string>();
+
             conn.Open();
             MySqlCommand cmd = new MySqlCommand("SELECT * FROM Stations WHERE ID = @id", conn);
             cmd.Parameters.AddWithValue("@id", id);
@@ -159,7 +189,7 @@ public class StationService
             {
                 if (await reader.ReadAsync())
                 {
-                    return new Station
+                    station = new Station
                     {
                         FID = reader.GetInt32("FID"),
                         ID = reader.GetString("ID"),
@@ -177,9 +207,168 @@ public class StationService
                     };
                 }
             }
+
+            // if station is null, then return not found
+            if (station == null)
+                return new NotFoundResult();
+
+            // get number of journeys from this station
+            string query = "SELECT COUNT(*) FROM Journeys WHERE DepartureStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        departureJourneys = 0;
+                    else
+                        departureJourneys = reader.GetInt32(0);
+                }
+            }
+
+            // Get number of journeys to this station
+            query = "SELECT COUNT(*) FROM Journeys WHERE ReturnStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        returnJourneys = 0;
+                    else
+                        returnJourneys = reader.GetInt32(0);
+                }
+            }
+
+            // Get avarage distance of journeys from this station
+            query = "SELECT AVG(CoveredDistance) FROM Journeys WHERE DepartureStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        avarageDepartureDistance = 0;
+                    else
+                        avarageDepartureDistance = reader.GetFloat(0);
+                }
+            }
+
+            // Get avarage distance of journeys to this station
+            query = "SELECT AVG(CoveredDistance) FROM Journeys WHERE ReturnStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        avarageReturnDistance = 0;
+                    else
+                        avarageReturnDistance = reader.GetFloat(0);
+                }
+            }
+
+            // Get Top 5 most popular departure stations for journeys ending at the station
+            query =
+                "SELECT Stations.NameFIN, COUNT(*) AS count FROM Journeys INNER JOIN Stations ON Journeys.DepartureStationId = Stations.ID WHERE Journeys.ReturnStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            query += " GROUP BY Journeys.DepartureStationId ORDER BY count DESC LIMIT 5";
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        continue;
+                    top5DepartureStations.Add(reader.GetString(0));
+                }
+            }
+
+            // Get Top 5 most popular return stations for journeys starting from the station
+            query =
+                "SELECT Stations.NameFIN, COUNT(*) AS count FROM Journeys INNER JOIN Stations ON Journeys.ReturnStationId = Stations.ID WHERE Journeys.DepartureStationId = @id";
+
+            // if month is not null, then filter by month
+            if (month != null)
+            {
+                query += " AND MONTH(DepartureTime) = @month AND MONTH(ReturnTime) = @month";
+            }
+
+            query += " GROUP BY Journeys.ReturnStationId ORDER BY count DESC LIMIT 5";
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@month", month);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    if (reader[0] == DBNull.Value)
+                        continue;
+                    top5ReturnStations.Add(reader.GetString(0));
+                }
+            }
+
             conn.Close();
+
+            return new OkObjectResult(
+                new
+                {
+                    station,
+                    departureJourneys,
+                    returnJourneys,
+                    avarageDepartureDistance,
+                    avarageReturnDistance,
+                    top5DepartureStations,
+                    top5ReturnStations
+                }
+            );
         }
-        return new NotFoundResult();
     }
 
     public static async Task<IActionResult> PutStationAsync(int id, Station station)
@@ -193,7 +382,6 @@ public class StationService
         {
             return new BadRequestResult();
         }
-
 
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
