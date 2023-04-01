@@ -6,6 +6,48 @@ namespace Backend_BikeApp.Services;
 
 public class StationService
 {
+
+    static List<string> ReturnStationIds()
+    {
+        using var conn = new MySqlConnection(MySQLHelper.connectionString);
+        try
+        {
+            conn.Open();
+        }
+        catch (MySqlException ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"SELECT ID FROM Stations;";
+        using var reader = cmd.ExecuteReader();
+        var ids = new List<string>();
+        while (reader.Read())
+        {
+            ids.Add(reader.GetString(0));
+        }
+        return ids;
+    }
+
+    static bool ValidateStation(Station record) {
+
+        if (
+            !int.TryParse(record.FID.ToString(), out int number)
+            || !int.TryParse(record.Capacity.ToString(), out number)
+            || !double.TryParse(record.Longitude, out double number1)
+            || !double.TryParse(record.Latitude, out number1)
+            || Convert.ToDouble(record.Longitude) < -180
+            || Convert.ToDouble(record.Longitude) > 180
+            || Convert.ToDouble(record.Latitude) < -90
+            || Convert.ToDouble(record.Latitude) > 90
+        )
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     /// <summary>
     /// It returns a list of stations, and it's asynchronous
     /// </summary>
@@ -147,6 +189,12 @@ public class StationService
             return new BadRequestResult();
         }
 
+        if (ValidateStation(station) == false)
+        {
+            return new BadRequestResult();
+        }
+
+
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
             conn.Open();
@@ -175,13 +223,36 @@ public class StationService
 
     public static async Task<ActionResult<Station>> PostStationAsync(Station station)
     {
+        List<string> ids = ReturnStationIds();
+        if (ids.Contains(station.ID!.ToString()))
+        {
+            return null!;
+        }
+
+        if (ValidateStation(station) == false)
+            return null!;
+
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand(
-                "INSERT INTO Stations (ID, NameFIN, NameSWE, NameENG, AddressFIN, AddressSWE, CityFIN, CitySWE, Operator, Capacity, Longitude, Latitude) VALUES (@ID, @NameFIN, @NameSWE, @NameENG, @AddressFIN, @AddressSWE, @CityFIN, @CitySWE, @Operator, @Capacity, @Longitude, @Latitude)",
+
+            MySqlCommand lastId = new MySqlCommand(
+                "SELECT FID FROM Stations ORDER BY FID DESC LIMIT 1",
                 conn
             );
+
+            using (MySqlDataReader reader = await lastId.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    station.FID = reader.GetInt32("FID") + 1;
+                }
+            }
+            MySqlCommand cmd = new MySqlCommand(
+                "INSERT INTO Stations (FID, ID, NameFIN, NameSWE, NameENG, AddressFIN, AddressSWE, CityFIN, CitySWE, Operator, Capacity, Longitude, Latitude) VALUES (@FID, @ID, @NameFIN, @NameSWE, @NameENG, @AddressFIN, @AddressSWE, @CityFIN, @CitySWE, @Operator, @Capacity, @Longitude, @Latitude)",
+                conn
+            );
+            cmd.Parameters.AddWithValue("@FID", station.FID);
             cmd.Parameters.AddWithValue("@ID", station.ID);
             cmd.Parameters.AddWithValue("@NameFIN", station.NameFIN);
             cmd.Parameters.AddWithValue("@NameSWE", station.NameSWE);

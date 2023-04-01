@@ -306,6 +306,12 @@ public class JourneyService
         {
             return new BadRequestResult();
         }
+
+        if (ValidateJourney(journey) == false)
+        {
+            return new BadRequestResult();
+        }
+
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
             conn.Open();
@@ -342,10 +348,24 @@ public class JourneyService
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand(
-                "INSERT INTO Journeys (DepartureTime, ReturnTime, DepartureStationId, DepartureStationName, ReturnStationId, ReturnStationName, CoveredDistance, Duration) VALUES (@departureTime, @returnTime, @departureStationId, @departureStationName, @returnStationId, @returnStationName, @coveredDistance, @duration)",
+            MySqlCommand lastId = new MySqlCommand(
+                "SELECT Id FROM Journeys ORDER BY Id DESC LIMIT 1",
                 conn
             );
+
+            using (MySqlDataReader reader = await lastId.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    journey.Id = reader.GetInt32("Id") + 1;
+                }
+            }
+
+            MySqlCommand cmd = new MySqlCommand(
+                "INSERT INTO Journeys (Id, DepartureTime, ReturnTime, DepartureStationId, DepartureStationName, ReturnStationId, ReturnStationName, CoveredDistance, Duration) VALUES (@id, @departureTime, @returnTime, @departureStationId, @departureStationName, @returnStationId, @returnStationName, @coveredDistance, @duration)",
+                conn
+            );
+            cmd.Parameters.AddWithValue("@id", journey.Id);
             cmd.Parameters.AddWithValue("@departureTime", journey.DepartureTime);
             cmd.Parameters.AddWithValue("@returnTime", journey.ReturnTime);
             cmd.Parameters.AddWithValue("@departureStationId", journey.DepartureStationId);

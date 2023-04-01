@@ -72,8 +72,15 @@ namespace Backend_BikeApp.Controllers
                 return BadRequest("Id mismatch");
             }
             try {
-                await StationService.PutStationAsync(id, station);
-                return NoContent();
+                var response = await StationService.PutStationAsync(id, station);
+                if (response != null)
+                {
+                    return response;
+                }
+                else
+                {
+                    return BadRequest();
+                }
             }
             catch (Exception ex)
             {
@@ -95,7 +102,7 @@ namespace Backend_BikeApp.Controllers
                 }
                 else
                 {
-                    return NotFound();
+                    return BadRequest();
                 }
             }
             catch (Exception ex)
