@@ -10,19 +10,33 @@ public class StationService
     /// It returns a list of stations, and it's asynchronous
     /// </summary>
     /// <param name="page">The page number to return.</param>
+    /// <param name="search">The search string to filter the results.</param>
+    /// <param name="limit">The limit of the results to return.</param>
     public static async Task<ActionResult<IEnumerable<Station>>> GetStationsAsync(
         string page,
-        string search
+        string search,
+        string limit
     )
     {
+        int totalPages = 0;
         List<Station> stations = new List<Station>();
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
             conn.Open();
-            if (page == null || !int.TryParse(page, out int pageNo) || pageNo < 0)
+            if (page == null || !int.TryParse(page, out int pageNo) || pageNo < 1)
             {
-                pageNo = 0;
+                pageNo = 1;
             }
+
+            pageNo -= 1;
+            if (pageNo < 0)
+                pageNo = 0;
+
+            if (limit == null || !int.TryParse(limit, out int limitNo) || limitNo < 1)
+            {
+                limitNo = 10;
+            }
+
             string query = $"SELECT * FROM Stations";
 
             if (!string.IsNullOrEmpty(search))
@@ -31,7 +45,10 @@ public class StationService
                     $"SELECT * FROM Stations WHERE NameFIN LIKE '%{search}%' OR NameSWE LIKE '%{search}%' OR NameENG LIKE '%{search}%' OR AddressFIN LIKE '%{search}%' OR AddressSWE LIKE '%{search}%' OR CityFIN LIKE '%{search}%' OR CitySWE LIKE '%{search}%' OR Operator LIKE '%{search}%' OR Capacity LIKE '%{search}%' OR Longitude LIKE '%{search}%' OR Latitude LIKE '%{search}%' OR ID LIKE '%{search}%'";
             }
 
-            query += $" LIMIT 10 OFFSET {pageNo * 10}";
+            string totalPageQuery = query.Replace("*", "COUNT(*)");
+
+            query += $" LIMIT {limitNo} OFFSET {pageNo * limitNo}";
+
 
             MySqlCommand cmd = new MySqlCommand(query, conn);
             using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
@@ -57,13 +74,31 @@ public class StationService
                     stations.Add(station);
                 }
             }
+
+            cmd = new MySqlCommand(totalPageQuery, conn);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    int totalStations = reader.GetInt32(0);
+                    totalPages = totalStations / limitNo;
+                    if (totalStations % limitNo != 0)
+                    {
+                        totalPages += 1;
+                    }
+                }
+            }
             conn.Close();
         }
 
         if (stations.Count == 0)
             return new NotFoundResult();
 
-        return stations;
+        return new OkObjectResult(new
+        {
+            stations,
+            totalPages
+        });
     }
 
     /// <summary>
