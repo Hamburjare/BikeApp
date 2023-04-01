@@ -108,8 +108,15 @@ namespace Backend_BikeApp.Controllers
         {
             try
             {
-                await JourneyService.PostJourneyAsync(journey);
-                return CreatedAtAction("GetJourney", new { id = journey.Id }, journey);
+                var response = await JourneyService.PostJourneyAsync(journey);
+                if (response != null)
+                {
+                    return response;
+                }
+                else
+                {
+                    return BadRequest();
+                }
             }
             catch (Exception ex)
             {
