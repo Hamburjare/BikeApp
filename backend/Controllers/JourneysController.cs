@@ -19,11 +19,28 @@ namespace Backend_BikeApp.Controllers
         {
             // Get the parameters from the query string
             var page = Request.Query["page"];
+            var limit = Request.Query["limit"];
             var search = Request.Query["search"];
             var orderBy = Request.Query["orderBy"];
+            var orderDir = Request.Query["orderDir"];
+            var durationMin = Request.Query["durationMin"];
+            var durationMax = Request.Query["durationMax"];
+            var distanceMin = Request.Query["distanceMin"];
+            var distanceMax = Request.Query["distanceMax"];
+
             try
             {
-                var response = await JourneyService.GetJourneysAsync(page!, search!, orderBy!);
+                var response = await JourneyService.GetJourneysAsync(
+                    page!,
+                    search!,
+                    orderBy!,
+                    limit!,
+                    orderDir!,
+                    durationMin!,
+                    durationMax!,
+                    distanceMin!,
+                    distanceMax!
+                );
                 if (response != null)
                 {
                     return response;
@@ -105,7 +122,8 @@ namespace Backend_BikeApp.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteJourney(int id)
         {
-            try {
+            try
+            {
                 await JourneyService.DeleteJourneyAsync(id);
                 return NoContent();
             }

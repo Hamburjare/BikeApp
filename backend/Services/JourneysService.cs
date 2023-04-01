@@ -10,37 +10,153 @@ public class JourneyService
     /// It returns a list of journeys, and it's asynchronous
     /// </summary>
     /// <param name="page">The page number to return.</param>
+    /// <param name="search">The search string to filter the results.</param>
+    /// <param name="orderBy">The column to order the results by.</param>
+    /// <param name="limit">The limit of the results to return.</param>
+    /// <param name="orderDir">The direction to order the results by.</param>
+    /// <param name="durationMin">The minimum duration to filter the results by.</param>
+    /// <param name="durationMax">The maximum duration to filter the results by.</param>
+    /// <param name="distanceMin">The minimum distance to filter the results by.</param>
+    /// <param name="distanceMax">The maximum distance to filter the results by.</param>
+    /// <returns>A list of journeys.</returns>
     public static async Task<ActionResult<IEnumerable<Journey>>> GetJourneysAsync(
         string page,
         string search,
-        string orderBy
-
-
+        string orderBy,
+        string limit,
+        string orderDir,
+        string durationMin,
+        string durationMax,
+        string distanceMin,
+        string distanceMax
     )
     {
+        int totalPages = 0;
+
         List<Journey> journeys = new List<Journey>();
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
             conn.Open();
-            if (page == null || !int.TryParse(page, out int pageNo) || pageNo < 0)
+
+            // If page is null or not an integer or less than 1, set it to 1
+            // This is the default value
+            if (page == null || !int.TryParse(page, out int pageNo) || pageNo < 1)
             {
+                pageNo = 1;
+            }
+
+            // If page is less than 0, set it to 0 after subtracting 1
+            pageNo -= 1;
+            if (pageNo < 0)
                 pageNo = 0;
+
+            // If limit is null or not an integer or less than 1, set it to 10
+            // This is the default value
+            if (limit == null || !int.TryParse(limit, out int limitNo) || limitNo < 1)
+            {
+                limitNo = 10;
             }
 
             string query = $"SELECT * FROM Journeys ";
 
-            if (!string.IsNullOrEmpty(search))
+            // If any of the filters are not empty, add WHERE to the query
+            if (
+                !string.IsNullOrEmpty(durationMin)
+                || !string.IsNullOrEmpty(durationMax)
+                || !string.IsNullOrEmpty(distanceMin)
+                || !string.IsNullOrEmpty(distanceMax)
+                || !string.IsNullOrEmpty(search)
+            )
             {
-                query =
-                    $"SELECT * FROM Journeys WHERE DepartureStationName LIKE '%{search}%' OR ReturnStationName LIKE '%{search}%' OR DepartureTime LIKE '%{search}%' OR ReturnTime LIKE '%{search}%' OR CoveredDistance LIKE '%{search}%' OR Duration LIKE '%{search}%' OR Id LIKE '%{search}%' OR DepartureStationId LIKE '%{search}%' OR ReturnStationId LIKE '%{search}%'";
+                query += "WHERE ";
             }
 
+            // If durationMin and durationMax are not empty, add BETWEEN to the query
+            if (!string.IsNullOrEmpty(durationMin) && !string.IsNullOrEmpty(durationMax))
+            {
+                query += $"Duration BETWEEN {durationMin} AND {durationMax} ";
+            }
+            // If durationMin is not empty, add >= to the query
+            else if (!string.IsNullOrEmpty(durationMin))
+            {
+                query += $"Duration >= {durationMin} ";
+            }
+            // If durationMax is not empty, add <= to the query
+            else if (!string.IsNullOrEmpty(durationMax))
+            {
+                query += $"Duration <= {durationMax} ";
+            }
+
+            // If distanceMin and distanceMax are not empty, add BETWEEN to the query
+            if (!string.IsNullOrEmpty(distanceMin) && !string.IsNullOrEmpty(distanceMax))
+            {
+                // If durationMin or durationMax are not empty, add AND to the query
+                if (!string.IsNullOrEmpty(durationMin) || !string.IsNullOrEmpty(durationMax))
+                {
+                    query += "AND ";
+                }
+                query += $"CoveredDistance BETWEEN {distanceMin} AND {distanceMax} ";
+            }
+            // If distanceMin is not empty, add >= to the query
+            else if (!string.IsNullOrEmpty(distanceMin))
+            {
+                // If durationMin or durationMax are not empty, add AND to the query
+                if (!string.IsNullOrEmpty(durationMin) || !string.IsNullOrEmpty(durationMax))
+                {
+                    query += "AND ";
+                }
+                query += $"CoveredDistance >= {distanceMin} ";
+            }
+            // If distanceMax is not empty, add <= to the query
+            else if (!string.IsNullOrEmpty(distanceMax))
+            {
+                // If durationMin or durationMax are not empty, add AND to the query
+                if (!string.IsNullOrEmpty(durationMin) || !string.IsNullOrEmpty(durationMax))
+                {
+                    query += "AND ";
+                }
+                query += $"CoveredDistance <= {distanceMax} ";
+            }
+
+            // If search is not empty, add LIKE to the query
+            if (!string.IsNullOrEmpty(search))
+            {
+                // If durationMin or durationMax or distanceMin or distanceMax are not empty, add AND to the query
+                if (
+                    !string.IsNullOrEmpty(durationMin)
+                    || !string.IsNullOrEmpty(durationMax)
+                    || !string.IsNullOrEmpty(distanceMin)
+                    || !string.IsNullOrEmpty(distanceMax)
+                )
+                {
+                    query += "AND ";
+                }
+                query +=
+                    $"(DepartureStationName LIKE '%{search}%' OR ReturnStationName LIKE '%{search}%') ";
+            }
+
+            // If orderBy is not empty, add ORDER BY to the query
             if (!string.IsNullOrEmpty(orderBy))
             {
                 query += $"ORDER BY {orderBy}";
+                // If orderDir is not empty, add ASC or DESC to the query
+                if (!string.IsNullOrEmpty(orderDir))
+                {
+                    // If orderDir is not ASC or DESC, set it to ASC
+                    if (orderDir.ToLower() != "asc" && orderDir.ToLower() != "desc")
+                    {
+                        orderDir = "ASC";
+                    }
+
+                    query += $" {orderDir}";
+                }
             }
 
-            query += $" LIMIT 10 OFFSET {pageNo * 10}";
+            // Get the total count of journeys
+            string totalPageQuery = query.Replace("*", "COUNT(*)");
+
+            // Add LIMIT and OFFSET to the query
+            query += $" LIMIT {limitNo} OFFSET {pageNo * limitNo}";
 
             MySqlCommand cmd = new MySqlCommand(query, conn);
             using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
@@ -62,12 +178,31 @@ public class JourneyService
                     journeys.Add(journey);
                 }
             }
+
+            cmd = new MySqlCommand(totalPageQuery, conn);
+            using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    // Get the total count of journeys
+                    int totalJourneys = reader.GetInt32(0);
+                    // Calculate the total number of pages
+                    totalPages = totalJourneys / limitNo;
+                    // If the total number of journeys is not divisible by the limit, add 1 to the total number of pages
+                    if (totalJourneys % limitNo != 0)
+                    {
+                        totalPages += 1;
+                    }
+                }
+            }
+
+            conn.Close();
         }
 
         if (journeys.Count == 0)
             return new NotFoundResult();
 
-        return journeys;
+        return new OkObjectResult(new { journeys, totalPages });
     }
 
     /// <summary>
