@@ -39,6 +39,25 @@ public class StationService
             || Convert.ToDouble(record.Longitude) > 180
             || Convert.ToDouble(record.Latitude) < -90
             || Convert.ToDouble(record.Latitude) > 90
+            || Convert.ToInt32(record.Capacity) < 0
+            || Convert.ToInt32(record.ID) < 0
+            || record.NameFIN == null
+            || string.IsNullOrWhiteSpace(record.NameFIN)
+            || record.NameENG == null
+            || string.IsNullOrWhiteSpace(record.NameENG)
+            || record.NameSWE == null
+            || string.IsNullOrWhiteSpace(record.NameSWE)
+            || record.AddressFIN == null
+            || string.IsNullOrWhiteSpace(record.AddressFIN)
+            || record.AddressSWE == null
+            || string.IsNullOrWhiteSpace(record.AddressSWE)
+            || record.CityFIN == null
+            || string.IsNullOrWhiteSpace(record.CityFIN)
+            || record.CitySWE == null
+            || string.IsNullOrWhiteSpace(record.CitySWE)
+            || record.Operator == null
+            || string.IsNullOrWhiteSpace(record.Operator)
+
         )
         {
             return false;
@@ -183,7 +202,7 @@ public class StationService
             List<string> top5ReturnStations = new List<string>();
 
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand("SELECT * FROM Stations WHERE ID = @id", conn);
+            MySqlCommand cmd = new MySqlCommand("SELECT * FROM Stations WHERE FID = @id", conn);
             cmd.Parameters.AddWithValue("@id", id);
             using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
             {
@@ -406,7 +425,7 @@ public class StationService
             await cmd.ExecuteNonQueryAsync();
             conn.Close();
         }
-        return new OkResult();
+        return new OkObjectResult(station);
     }
 
     public static async Task<ActionResult<Station>> PostStationAsync(Station station)
@@ -472,6 +491,7 @@ public class StationService
             MySqlCommand cmd = new MySqlCommand("DELETE FROM Stations WHERE FID = @FID", conn);
             cmd.Parameters.AddWithValue("@FID", id);
             await cmd.ExecuteNonQueryAsync();
+            conn.Close();
         }
         return new OkResult();
     }

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Backend_BikeApp.Controllers;
 using Backend_BikeApp.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -820,6 +818,7 @@ namespace BikeApp_Backend.test
             await controller.DeleteJourney(journeyResult!.Id);
         }
 
+        // DELETE: api/Journeys/5
         [Fact]
         public void DeleteJourney() {
             // Arrange

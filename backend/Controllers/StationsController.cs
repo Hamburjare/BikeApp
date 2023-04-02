@@ -114,12 +114,19 @@ namespace Backend_BikeApp.Controllers
 
         // DELETE: api/Stations/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Station>> DeleteStation(int id)
+        public async Task<IActionResult> DeleteStation(int id)
         {
             try
             {
-                await StationService.DeleteStationAsync(id);
-                return NoContent();
+                var response = await StationService.DeleteStationAsync(id);
+                if (response != null)
+                {
+                    return response;
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
             catch (Exception ex)
             {
