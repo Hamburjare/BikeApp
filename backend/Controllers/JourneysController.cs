@@ -90,8 +90,16 @@ namespace Backend_BikeApp.Controllers
             }
             try
             {
-                await JourneyService.PutJourneyAsync(id, journey);
-                return NoContent();
+                var responce = await JourneyService.PutJourneyAsync(id, journey);
+                if (responce != null)
+                {
+                    return responce;
+                }
+                else
+                {
+                    return BadRequest();
+                }
+                
             }
             catch (Exception ex)
             {
@@ -130,8 +138,15 @@ namespace Backend_BikeApp.Controllers
         {
             try
             {
-                await JourneyService.DeleteJourneyAsync(id);
-                return NoContent();
+                var response = await JourneyService.DeleteJourneyAsync(id);
+                if (response != null)
+                {
+                    return response;
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
             catch (Exception ex)
             {

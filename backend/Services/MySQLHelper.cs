@@ -2,8 +2,7 @@ using MySqlConnector;
 namespace Backend_BikeApp.Models
 {
     public class MySQLHelper {
-        // this gets initialized in Program.cs
-        public static string? connectionString;
+        public static string? connectionString = "Server=host.docker.internal;Port=3306;User ID=root;Password=Abc123;Database=bikeapp;";
 
     }
 }

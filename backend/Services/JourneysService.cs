@@ -47,8 +47,6 @@ public class JourneyService
             || record.ReturnTime < record.DepartureTime
             || Convert.ToInt32(record.DepartureStationId) < 0
             || Convert.ToInt32(record.ReturnStationId) < 0
-            || Convert.ToInt32(record.CoveredDistance) < 0
-            || Convert.ToInt32(record.Duration) < 0
         )
         {
             return false;
@@ -272,7 +270,7 @@ public class JourneyService
             {
                 if (await reader.ReadAsync())
                 {
-                    return new Journey
+                    return new OkObjectResult(new Journey
                     {
                         Id = reader.GetInt32("Id"),
                         DepartureTime = reader.GetDateTime("DepartureTime"),
@@ -283,7 +281,8 @@ public class JourneyService
                         ReturnStationName = reader.GetString("ReturnStationName"),
                         CoveredDistance = reader.GetInt32("CoveredDistance"),
                         Duration = reader.GetInt32("Duration")
-                    };
+                    });
+                    
                 }
             }
             conn.Close();
@@ -328,7 +327,7 @@ public class JourneyService
             conn.Close();
         }
 
-        return new OkResult();
+        return new OkObjectResult(journey);
     }
 
     /// <summary>
