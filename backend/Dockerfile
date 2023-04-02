@@ -3,6 +3,7 @@ WORKDIR /source
 COPY . .
 RUN dotnet restore "./Backend-BikeApp.csproj" --disable-parallel
 RUN dotnet publish "./Backend-BikeApp.csproj" -c Release -o /app --no-restore
+RUN dotnet test "./Backend-BikeApp.csproj"
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /app
