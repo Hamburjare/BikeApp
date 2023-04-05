@@ -4,7 +4,7 @@ This is a web app for Solita Dev Academy 2023.
 
 ## Technologies
 * Docker
-* MySQL
+* MariaDB
 * Dotnet Core 6.0
 * xUnit
 
