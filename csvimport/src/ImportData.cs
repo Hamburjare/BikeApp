@@ -1,6 +1,7 @@
 using CsvHelper;
 using MySqlConnector;
 using System.Globalization;
+using System.Net;
 
 namespace csvimport;
 
@@ -10,25 +11,56 @@ namespace csvimport;
 
 public class ImportData
 {
+    private readonly ILogger<ImportData> _logger;
+
+    public ImportData(ILogger<ImportData> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task ExecuteAsync()
+    {
+        // _logger.LogInformation("Starting import...");
+        // /* Creating a table(s) in the database. */
+        // bool success = await CreateTable();
+        // if (!success)
+        // {
+        //     _logger.LogError("Failed to create a table(s) in the database!");
+        //     return;
+        // }
+
+        await ImportStationsAsync();
+        await ImportJourneysDataAsync();
+    }
+
     /* Getting the connection string from the environment variable. */
-    public string? connectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION_STRING");
+    public string? connectionString =
+        "Server=host.docker.internal;Port=3306;User ID=root;Password=Abc123;Database=bikeapp; default command timeout=600;";
 
-    public virtual string journeyCSVlocation { get; set; } = @".\datasets\";
+    public List<string> journeyCSVs = new List<string>()
+    {
+        "https://dev.hsl.fi/citybikes/od-trips-2021/2021-05.csv",
+        "https://dev.hsl.fi/citybikes/od-trips-2021/2021-06.csv",
+        "https://dev.hsl.fi/citybikes/od-trips-2021/2021-07.csv"
+    };
 
-    public virtual string stationCSVlocation { get; set; } = @".\datasets\stations";
+    public List<string> stationCSVs = new List<string>()
+    {
+        "https://opendata.arcgis.com/datasets/726277c507ef4914b0aec3cbcfcbfafc_0.csv"
+    };
 
-    public virtual string journeysDBTableName { get; set; } = "Journeys";
+    public string journeysDBTableName { get; set; } = "Journeys";
 
-    public virtual string stationsDBTableName { get; set; } = "Stations";
+    public string stationsDBTableName { get; set; } = "Stations";
 
     /// <summary>
     /// It creates a table.
     /// </summary>
-    public virtual bool CreateTable()
+    public async Task<bool> CreateTable()
     {
         try
         {
-            Console.WriteLine("Creating tables...");
+            _logger.LogInformation("Creating tables...");
 
             /* Creating a connection to the database. */
             using var conn = new MySqlConnection(connectionString);
@@ -36,15 +68,15 @@ public class ImportData
             /* Opening a connection to the database. */
             try
             {
-                conn.Open();
+                await conn.OpenAsync();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message);
             }
 
             /* Getting all the files in the sql folder that end with .sql */
-            var files = Directory.GetFiles(@".\sql\", "*.sql");
+            var files = Directory.GetFiles(@"./sql/", "*.sql");
 
             /* Creating a table in the database. */
             foreach (var file in files)
@@ -56,13 +88,13 @@ public class ImportData
 
                 cmd.ExecuteNonQuery();
 
-                Console.WriteLine($"Table from {file} created.");
+                _logger.LogInformation($"Table from {file} created.");
             }
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogError(ex.Message);
             return false;
         }
     }
@@ -82,21 +114,18 @@ public class ImportData
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogError(ex.Message);
         }
-
-        /* Getting all the files in the datasets folder that end in .csv */
-        string[] files = Directory.GetFiles(journeyCSVlocation, "*.csv");
 
         var tasks = new List<Task>();
 
         List<string> ids = ReturnStationIds();
         List<string> finishedQuery = new List<string>();
 
-        Console.WriteLine("Started reading the file...\nThis may take a while... :)");
+        _logger.LogInformation("Started reading the url(s)...");
 
         /* A foreach loop that is iterating through the files in the files array. */
-        foreach (var file in files)
+        foreach (var url in journeyCSVs)
         {
             tasks.Add(
                 Task.Run(async () =>
@@ -109,8 +138,18 @@ public class ImportData
                     /* Creating a list of JourneyCSV objects. */
                     var records = new List<JourneyCSV>();
 
-                    /* Opening a file and reading it. */
-                    using (var sr = new StreamReader(file))
+                    var myClient = new HttpClient(
+                        new HttpClientHandler() { UseDefaultCredentials = true }
+                    );
+                    var response = await myClient.GetAsync(url);
+                    if (response.StatusCode != HttpStatusCode.OK)
+                    {
+                        _logger.LogError($"Url: {url} not found.");
+                        return;
+                    }
+                    var streamResponse = await response.Content.ReadAsStreamAsync();
+
+                    StreamReader sr = new StreamReader(streamResponse);
 
                     /* Creating a new instance of the CsvReader class. */
                     using (var csv = new CsvReader(sr, CultureInfo.InvariantCulture))
@@ -132,14 +171,15 @@ public class ImportData
                                 count++;
                             }
                         }
-                        Console.WriteLine($"File: {file} read.");
+                        _logger.LogInformation($"Url: {url} read.");
                     }
                     query = JourneysBatchAsync(query, records);
                     finishedQuery.AddRange(query);
 
                     records.Clear();
 
-                    Console.WriteLine($"Total valid records: {count} in {file}");
+                    _logger.LogInformation($"File: {url} imported.");
+                    _logger.LogInformation($"Total valid records: {count} in file {url}.");
                 })
             );
         }
@@ -153,9 +193,9 @@ public class ImportData
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogError(ex.Message);
         }
-        Console.WriteLine("Done.");
+        _logger.LogInformation("Importing journeys data finished.");
     }
 
     /// <summary>
@@ -165,19 +205,18 @@ public class ImportData
     /// <param name="query">A list of strings that contain the queries to be executed.</param>
     async Task InsertJourneysAsync(MySqlConnection conn, List<string> query)
     {
-        string sql =
-            $"INSERT INTO {journeysDBTableName} (DepartureTime, ReturnTime, DepartureStationId, DepartureStationName, ReturnStationId, ReturnStationName, CoveredDistance, Duration) VALUES "
-            + string.Join(",", query);
         try
         {
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = sql;
+            string sql =
+                $"INSERT INTO {journeysDBTableName} (DepartureTime, ReturnTime, DepartureStationId, DepartureStationName, ReturnStationId, ReturnStationName, CoveredDistance, Duration) VALUES "
+                + string.Join(",", query);
 
-            await cmd.ExecuteNonQueryAsync();
+            await File.WriteAllTextAsync(@"./sql/journeysitems.sql", sql);
+
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogError(ex.Message);
         }
     }
 
@@ -205,24 +244,17 @@ public class ImportData
     /// Returns a list of station ids.
     /// </summary>
     /// <returns>List of station ids.</returns>
+
     List<string> ReturnStationIds()
     {
-        using var conn = new MySqlConnection(connectionString);
-        try
+        List<string> ids = new List<string>();
+        using (var sr = new StreamReader(@"./src/stationids.txt"))
         {
-            conn.Open();
-        }
-        catch (MySqlException ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"SELECT ID FROM {stationsDBTableName};";
-        using var reader = cmd.ExecuteReader();
-        var ids = new List<string>();
-        while (reader.Read())
-        {
-            ids.Add(reader.GetString(0));
+            string[] idsArray = sr.ReadToEnd().Split(',');
+            foreach (var id in idsArray)
+            {
+                ids.Add(id);
+            }
         }
         return ids;
     }
@@ -270,9 +302,17 @@ public class ImportData
     /// <returns>True if the station is valid, false otherwise.</returns>
     private bool IsValidStation(StationCSV record)
     {
-        /* The above code is replacing the decimal point with a comma. */
-        record.Longitude = record.Longitude?.Replace(".", ",");
-        record.Latitude = record.Latitude?.Replace(".", ",");
+        /* This if for docker container, because you need "." to double in docker and without docker ","
+        I dont know why but this makes sure that it doesnt matter which to use. */
+        if (
+            !double.TryParse(record.Longitude, out double number)
+            && !double.TryParse(record.Latitude, out number)
+        )
+        {
+            record.Longitude = record.Longitude?.Replace(".", ",");
+            record.Latitude = record.Latitude?.Replace(".", ",");
+        }
+
         record.NameFIN = record.NameFIN?.Replace("'", "''");
         record.NameSWE = record.NameSWE?.Replace("'", "''");
         record.NameENG = record.NameENG?.Replace("'", "''");
@@ -298,10 +338,10 @@ public class ImportData
 
         // Check if longitude and latitude are valid
         if (
-            !int.TryParse(record.FID.ToString(), out int number)
-            || !int.TryParse(record.Capacity.ToString(), out number)
-            || !double.TryParse(record.Longitude, out double number1)
-            || !double.TryParse(record.Latitude, out number1)
+            !int.TryParse(record.FID.ToString(), out int number1)
+            || !int.TryParse(record.Capacity.ToString(), out number1)
+            || !double.TryParse(record.Longitude, out double number2)
+            || !double.TryParse(record.Latitude, out number2)
             || Convert.ToDouble(record.Longitude) < -180
             || Convert.ToDouble(record.Longitude) > 180
             || Convert.ToDouble(record.Latitude) < -90
@@ -330,31 +370,41 @@ public class ImportData
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogError(ex.Message);
         }
-
-        /* Getting all the files in the stations folder that end in .csv */
-        var files = Directory.GetFiles(stationCSVlocation, "*.csv");
 
         var tasks = new List<Task>();
 
         List<string> finishedQuery = new List<string>();
 
         /* Iterating through the files in the files array. */
-        foreach (var file in files)
+        foreach (var url in stationCSVs)
         {
             tasks.Add(
                 Task.Run(async () =>
                 {
-                    var count = 0;
+                    /* Creating a list of strings. */
+                    var query = new List<string>();
+
+                    int count = 0;
+
                     /* Creating a list of StationCSV objects. */
                     var records = new List<StationCSV>();
 
-                    /* Creating a new query. */
-                    List<string> query = new List<string>();
+                    var myClient = new HttpClient(
+                        new HttpClientHandler() { UseDefaultCredentials = true }
+                    );
+                    var response = await myClient.GetAsync(url);
+                    if (response.StatusCode != HttpStatusCode.OK)
+                    {
+                        _logger.LogError($"Url: {url} not found.");
+                        return;
+                    }
+                    var streamResponse = await response.Content.ReadAsStreamAsync();
+
+                    StreamReader sr = new StreamReader(streamResponse);
 
                     /* Opening a file and reading it. */
-                    using (var sr = new StreamReader(file))
 
                     using (var csv = new CsvReader(sr, CultureInfo.InvariantCulture))
                     {
@@ -375,7 +425,7 @@ public class ImportData
                                 count++;
                             }
                         }
-                        Console.WriteLine($"File: {file} read.");
+                        _logger.LogInformation($"File: {url} read.");
                     }
 
                     query = StationsBatchAsync(query, records);
@@ -383,8 +433,8 @@ public class ImportData
 
                     records.Clear();
 
-                    Console.WriteLine($"File: {file} imported.");
-                    Console.WriteLine($"Total valid records: {count} in file {file}.");
+                    _logger.LogInformation($"File: {url} imported.");
+                    _logger.LogInformation($"Total valid records: {count} in file {url}.");
                 })
             );
         }
@@ -398,10 +448,10 @@ public class ImportData
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogError(ex.Message);
         }
 
-        Console.WriteLine("Done.");
+        _logger.LogInformation("Stations imported.");
     }
 
     /// <summary>
@@ -429,19 +479,19 @@ public class ImportData
     /// <param name="records">The list of records to insert.</param>
     private async Task InsertStationsAsync(MySqlConnection conn, List<string> query)
     {
-        string sql =
-            $"INSERT INTO {stationsDBTableName} (FID, ID, NameFIN, NameSWE, NameENG, AddressFIN, AddressSWE, CityFIN, CitySWE, Operator, Capacity, Longitude, Latitude) VALUES "
-            + string.Join(",", query);
         try
         {
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = sql;
 
-            await cmd.ExecuteNonQueryAsync();
+            string sql =
+                $"INSERT INTO {stationsDBTableName} (FID, ID, NameFIN, NameSWE, NameENG, AddressFIN, AddressSWE, CityFIN, CitySWE, Operator, Capacity, Longitude, Latitude) VALUES "
+                + string.Join(",", query);
+            
+            await File.WriteAllTextAsync(@"./sql/stationsitems.sql", sql);
+
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogError(ex.Message);
         }
     }
 }
