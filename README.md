@@ -29,7 +29,7 @@ This is a web app for Solita Dev Academy 2023.
 
 
 ## Tests
-  You can run the tests by running the following command after you have successfully started docker container(s) [(step 6)](#installation):
+  You can run the tests by running the following command after you have successfully started docker container(s) [(step 6)](#installation) and populated the database [(step 3)](#installation):
   ```bash
   docker exec backend dotnet test Backend-BikeApp.dll
   ```
