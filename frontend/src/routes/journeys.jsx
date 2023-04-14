@@ -9,6 +9,7 @@ export default function App() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [data, setData] = useState([]);
   const [pageCount, setPageCount] = useState(0);
+  let limit = 10;
   let orderBy = "id";
   let orderDir = "asc";
   let search = null;
@@ -58,9 +59,18 @@ export default function App() {
     tableInstance;
 
   const handlePageClick = (event) => {
-    console.log(`User requested page number ${event.selected}`);
-    setData([]);
+    handleMaxDistance(document.getElementById("maxDistance").value);
+    handleMinDistance(document.getElementById("minDistance").value);
+    handleMaxDuration(document.getElementById("maxDuration").value);
+    handleMinDuration(document.getElementById("minDuration").value);
+    handleLimit(document.getElementById("limit").value);
+    search = document.getElementById("search").value;
+    console.log(`User requested page number ${event.selected + 1}`);
     fetchJourneys(event.selected + 1);
+  };
+
+  const handleLimit = (event) => {
+    limit = event;
   };
 
   const handleSearch = (event) => {
@@ -68,7 +78,9 @@ export default function App() {
     handleMinDistance(document.getElementById("minDistance").value);
     handleMaxDuration(document.getElementById("maxDuration").value);
     handleMinDuration(document.getElementById("minDuration").value);
+    handleLimit(document.getElementById("limit").value);
     search = event;
+    setIsLoaded(false);
   };
 
   const handleOrderDir = (event) => {
@@ -103,6 +115,7 @@ export default function App() {
     document.getElementById("minDuration").value = "";
     document.getElementById("maxDistance").value = "";
     document.getElementById("minDistance").value = "";
+    document.getElementById("limit").value = 10;
     search = null;
     orderDir = "asc";
     orderBy = "id";
@@ -110,12 +123,15 @@ export default function App() {
     minDuration = 0;
     maxDistance = 0;
     minDistance = 0;
+    limit = 10;
+    setIsLoaded(false);
   };
 
   async function fetchJourneys(page) {
-    let uri = `https://localhost:5000/api/journeys?page=${page}`;
+    let uri = `https://localhost:5000/api/journeys?page=${page}&limit=${limit}`;
 
-    if (search && search.length) { // check length to avoid sending empty search string
+    if (search && search.length) {
+      // check length to avoid sending empty search string
       uri += `&search=${search}`;
     }
 
@@ -128,7 +144,6 @@ export default function App() {
     if (orderBy) {
       uri += `&orderBy=${orderBy}`;
     }
-
 
     if (maxDuration) {
       uri += `&durationMax=${maxDuration}`;
@@ -146,10 +161,8 @@ export default function App() {
       uri += `&distanceMin=${minDistance}`;
     }
 
-    setIsLoaded(false);
-    await axios(
-      uri
-    )
+    setData([]);
+    await axios(uri)
       .then((res) => {
         setData(res.data.journeys);
         setPageCount(res.data.totalPages);
@@ -197,6 +210,20 @@ export default function App() {
           >
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
+          </select>
+        </div>
+        <div>
+          <div className="text-white text-center text-xl mt-3">Limit</div>
+          <select
+            className="bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white"
+            id="limit"
+            name="limit"
+            onChange={handleLimit}
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
           </select>
         </div>
       </div>
@@ -257,7 +284,6 @@ export default function App() {
             onClick={() => {
               handleSearch(document.getElementById("search").value);
               fetchJourneys(1);
-
             }}
           >
             Search
@@ -269,7 +295,6 @@ export default function App() {
             onClick={() => {
               handleReset();
               fetchJourneys(1);
-
             }}
           >
             Reset
@@ -278,6 +303,30 @@ export default function App() {
       </div>
     </div>
   );
+
+  const body = React.useMemo(() => {
+    return (
+      <tbody {...getTableBodyProps()}>
+        {rows.map((row) => {
+          prepareRow(row);
+          return (
+            <tr {...row.getRowProps()}>
+              {row.cells.map((cell) => {
+                return (
+                  <td
+                    className="border-solid border-2 border-white px-2"
+                    {...cell.getCellProps()}
+                  >
+                    {cell.render("Cell")}
+                  </td>
+                );
+              })}
+            </tr>
+          );
+        })}
+      </tbody>
+    );
+  }, [getTableBodyProps, rows, prepareRow]);
 
   if (error) {
     return (
@@ -314,25 +363,7 @@ export default function App() {
               ))}
             </thead>
 
-            <tbody {...getTableBodyProps()}>
-              {rows.map((row) => {
-                prepareRow(row);
-                return (
-                  <tr {...row.getRowProps()}>
-                    {row.cells.map((cell) => {
-                      return (
-                        <td
-                          className="border-solid border-2 border-white px-2"
-                          {...cell.getCellProps()}
-                        >
-                          {cell.render("Cell")}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
+            {body}
           </table>
           <footer className="text-center text-white mt-3">
             <ReactPaginate
@@ -344,11 +375,10 @@ export default function App() {
               breakLabel="..."
               nextLabel="next >"
               onPageChange={handlePageClick}
-              pageRangeDisplayed={3}
+              pageRangeDisplayed={1}
               pageCount={pageCount}
               previousLabel="< previous"
               renderOnZeroPageCount={null}
-              containerClassName="pagination"
               activeClassName="border-2 border-white rounded p-2"
             />
           </footer>
