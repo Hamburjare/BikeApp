@@ -1,0 +1,55 @@
+import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('http://localhost:5173/');
+  await page.getByRole('button', { name: 'open drawer' }).click();
+  await page.getByRole('button', { name: 'Add Station' }).click();
+  await page.locator('button').nth(1).click();
+  await page.getByPlaceholder('Station ID').click();
+  await page.getByPlaceholder('Station ID').fill('12365');
+  await page.getByPlaceholder('Station Name (Finnish)').click();
+  await page.getByPlaceholder('Station Name (Finnish)').fill('pasila');
+  await page.getByPlaceholder('Station Name (Finnish)').dblclick();
+  await page.getByPlaceholder('Station Name (Finnish)').click();
+  await page.getByPlaceholder('Station Name (English)').click();
+  await page.getByPlaceholder('Station Name (English)').fill('pasila');
+  await page.getByPlaceholder('Station Name (English)').click();
+  await page.getByPlaceholder('Station Name (English)').fill('pasilapasila');
+  await page.getByPlaceholder('Station Name (English)').press('Control+z');
+  await page.getByPlaceholder('Station Name (English)').click();
+  await page.getByPlaceholder('Station Name (English)').press('Tab');
+  await page.getByPlaceholder('Station Name (Swedish)').fill('pasila');
+  await page.getByPlaceholder('Station Name (Swedish)').press('Tab');
+  await page.getByPlaceholder('Address (Finnish)').fill('pasila');
+  await page.getByPlaceholder('Address (Finnish)').press('Tab');
+  await page.getByPlaceholder('Address (Swedish)').fill('pasila');
+  await page.getByPlaceholder('Address (Swedish)').click();
+  await page.getByPlaceholder('Address (Swedish)').press('Tab');
+  await page.getByPlaceholder('City (Finnish)').fill('pasila');
+  await page.getByPlaceholder('City (Finnish)').press('Tab');
+  await page.getByPlaceholder('City (Swedish)').fill('pasila');
+  await page.getByPlaceholder('City (Swedish)').press('Tab');
+  await page.getByPlaceholder('Operator').fill('pasila');
+  await page.getByPlaceholder('Operator').press('Tab');
+  await page.getByPlaceholder('Capacity').fill('65');
+  await page.getByPlaceholder('Capacity').press('Tab');
+  await page.getByPlaceholder('Latitude').fill('189');
+  await page.getByPlaceholder('Latitude').press('Tab');
+  await page.getByPlaceholder('Longitude').fill('6578');
+  page.once('dialog', dialog => {
+    console.log(`Dialog message: ${dialog.message()}`);
+    dialog.dismiss().catch(() => {});
+  });
+  await page.locator('form').getByRole('button', { name: 'Add Station' }).click();
+  await page.getByPlaceholder('Latitude').dblclick();
+  await page.getByText('Station IDStation Name (Finnish)Station Name (English)Station Name (Swedish)Addr').click();
+  await page.getByPlaceholder('Latitude').click();
+  await page.getByPlaceholder('Latitude').fill('69,69');
+  await page.getByPlaceholder('Longitude').click();
+  await page.getByPlaceholder('Longitude').fill('69.69');
+  page.once('dialog', dialog => {
+    console.log(`Dialog message: ${dialog.message()}`);
+    dialog.dismiss().catch(() => {});
+  });
+  await page.locator('form').getByRole('button', { name: 'Add Station' }).click();
+});
