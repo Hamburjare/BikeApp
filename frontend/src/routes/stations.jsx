@@ -16,10 +16,6 @@ export default function App() {
   const columns = React.useMemo(
     () => [
       {
-        Header: "FID",
-        accessor: "fid",
-      },
-      {
         Header: "ID",
         accessor: "id",
       },
@@ -203,7 +199,7 @@ export default function App() {
               })}
               <td className="border-solid border-2 border-white px-2">
                 <Link
-                  to = {`/stations/${row.original.fid}`}
+                  to = {`/stations/${row.original.id}`}
                 >
                   <button className="border-2 border-white rounded p-2">
                     View
