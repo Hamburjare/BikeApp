@@ -209,7 +209,7 @@ export default function App() {
           ))}
         </thead>
 
-        <tbody {...getTableBodyProps()}>
+        <tbody className="w-fit" {...getTableBodyProps()}>
           {rows.map((row) => {
             prepareRow(row);
             return (
