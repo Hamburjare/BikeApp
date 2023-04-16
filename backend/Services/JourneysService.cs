@@ -32,7 +32,12 @@ public class JourneyService
     {
         List<string> ids = ReturnStationIds();
 
-        if (!ids.Contains(record.DepartureStationId!) && !ids.Contains(record.ReturnStationId!))
+        if (!ids.Contains(record.DepartureStationId!))
+        {
+            return false;
+        }
+
+        if (!ids.Contains(record.ReturnStationId!))
         {
             return false;
         }
