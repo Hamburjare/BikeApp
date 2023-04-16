@@ -98,58 +98,56 @@ export default function StationView() {
 
   function Stats() {
     if (isUpdating) {
-      return (
-        <Loading />
-      );
+      return <Loading />;
     }
     return (
-      <div>
+      <div className="flex flex-col justify-center items-center">
         <div className="text-white text-md mt-3">
-            Total number of journeys starting from this station
-          </div>
-          <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
-            {departureJourneys}
-          </div>
-          <div className="text-white text-md mt-3">
-            Total number of journeys ending at this station
-          </div>
-          <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
-            {returnJourneys}
-          </div>
-          <div className="text-white text-md mt-3">
-            The average distance of a journey starting from this station
-          </div>
-          <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
-            {(avgDepartureDistance / 1000).toFixed(2)} km
-          </div>
-          <div className="text-white text-md mt-3">
-            The average distance of a journey ending at this station
-            <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
-              {(avgReturnDistance / 1000).toFixed(2)} km
+          Total number of journeys starting from this station
+        </div>
+        <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
+          {departureJourneys}
+        </div>
+        <div className="text-white text-md mt-3">
+          Total number of journeys ending at this station
+        </div>
+        <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
+          {returnJourneys}
+        </div>
+        <div className="text-white text-md mt-3">
+          The average distance of a journey starting from this station
+        </div>
+        <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
+          {(avgDepartureDistance / 1000).toFixed(2)} km
+        </div>
+        <div className="text-white text-md mt-3">
+          The average distance of a journey ending at this station
+        </div>
+        <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
+          {(avgReturnDistance / 1000).toFixed(2)} km
+        </div>
+        <div className="text-white text-md mt-3">
+          Top 5 most popular departure stations for journeys ending at this
+          station
+        </div>
+        <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
+          {top5DepartureStations.map((station, index) => (
+            <div>
+              {index + 1}. {station}
             </div>
-          </div>
-          <div className="text-white text-md mt-3">
-            Top 5 most popular departure stations for journeys ending at this
-            station
-            <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
-              {top5DepartureStations.map((station, index) => (
-                <div>
-                  {index + 1}. {station}
-                </div>
-              ))}
+          ))}
+        </div>
+        <div className="text-white text-md mt-3">
+          Top 5 most popular return stations for journeys starting from this
+          station
+        </div>
+        <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
+          {top5ReturnStations.map((station, index) => (
+            <div>
+              {index + 1}. {station}
             </div>
-          </div>
-          <div className="text-white text-md mt-3">
-            Top 5 most popular return stations for journeys starting from this
-            station
-            <div className="text-white text-md mt-3 bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit">
-              {top5ReturnStations.map((station, index) => (
-                <div>
-                  {index + 1}. {station}
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -211,10 +209,10 @@ export default function StationView() {
         </div>
         <div>
           <h1 className="text-center text-3xl mb-2 mt-10 text-white">Stats</h1>
-          <div>
+          <div className="flex justify-center flex-col mr-3 text-center items-center">
             <div className="text-white text-xl mt-3">Filter by month</div>
             <select
-              className="bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white"
+              className="bg-black border-solid border-2 border-white rounded p-2 mr-2 text-white w-fit"
               id="filter"
               name="filter"
               onChange={handleMonthChange}
@@ -233,14 +231,12 @@ export default function StationView() {
               <option value="november">November</option>
               <option value="december">December</option>
             </select>
+            <Stats />
           </div>
-          
-          <Stats/>
-          
         </div>
 
         <MapContainer
-          className="mt-3 mb-3 h-96 w-full"
+          className="mt-3 mb-11 h-96 w-full"
           center={[stationData.latitude, stationData.longitude]}
           zoom={12}
           scrollWheelZoom={false}

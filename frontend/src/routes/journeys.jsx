@@ -3,10 +3,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useTable } from "react-table";
 import ReactPaginate from "react-paginate";
+import Loading from "../Loading";
 
 export default function App() {
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [data, setData] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   let limit = 10;
@@ -161,14 +163,17 @@ export default function App() {
       uri += `&distanceMin=${minDistance}`;
     }
 
-    setData([]);
+    setIsUpdating(true);
     await axios(uri)
       .then((res) => {
         setData(res.data.journeys);
         setPageCount(res.data.totalPages);
       })
       .catch((err) => setError(err))
-      .finally(() => setIsLoaded(true));
+      .finally(() => {
+        setIsUpdating(false);
+        setIsLoaded(true);
+      });
   }
 
   const header = (
@@ -225,6 +230,9 @@ export default function App() {
             <option value="50">50</option>
             <option value="100">100</option>
           </select>
+        </div>
+        <div className="mt-auto border-2 border-white rounded p-2 ml-2">
+          Count: {data.length}
         </div>
       </div>
 
@@ -304,29 +312,49 @@ export default function App() {
     </div>
   );
 
-  const body = React.useMemo(() => {
+  function Table() {
+    if (isUpdating) {
+      return <Loading />;
+    }
     return (
-      <tbody {...getTableBodyProps()}>
-        {rows.map((row) => {
-          prepareRow(row);
-          return (
-            <tr {...row.getRowProps()}>
-              {row.cells.map((cell) => {
-                return (
-                  <td
-                    className="border-solid border-2 border-white px-2"
-                    {...cell.getCellProps()}
-                  >
-                    {cell.render("Cell")}
-                  </td>
-                );
-              })}
+      <table className="w-full" {...getTableProps()}>
+        <thead>
+          {headerGroups.map((headerGroup) => (
+            <tr {...headerGroup.getHeaderGroupProps()}>
+              {headerGroup.headers.map((column) => (
+                <th
+                  className="border-solid border-x-2 border-white px-2"
+                  {...column.getHeaderProps()}
+                >
+                  {column.render("Header")}
+                </th>
+              ))}
             </tr>
-          );
-        })}
-      </tbody>
+          ))}
+        </thead>
+
+        <tbody {...getTableBodyProps()}>
+          {rows.map((row) => {
+            prepareRow(row);
+            return (
+              <tr {...row.getRowProps()}>
+                {row.cells.map((cell) => {
+                  return (
+                    <td
+                      className="border-solid border-2 border-white px-2"
+                      {...cell.getCellProps()}
+                    >
+                      {cell.render("Cell")}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     );
-  }, [getTableBodyProps, rows, prepareRow]);
+  }
 
   if (error) {
     return (
@@ -336,35 +364,15 @@ export default function App() {
       </div>
     );
   } else if (!isLoaded) {
-    return (
-      <div>
-        {header}
-        <div className="text-white">Loading...</div>
-      </div>
-    );
+    return <Loading />;
   } else {
     return (
-      <div>
+      <div className="">
         {header}
         <div className="text-white border-solid border-2 border-white rounded">
-          <table className="w-full" {...getTableProps()}>
-            <thead>
-              {headerGroups.map((headerGroup) => (
-                <tr {...headerGroup.getHeaderGroupProps()}>
-                  {headerGroup.headers.map((column) => (
-                    <th
-                      className="border-solid border-x-2 border-white px-2"
-                      {...column.getHeaderProps()}
-                    >
-                      {column.render("Header")}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-
-            {body}
-          </table>
+          <Table data={data} />
+        </div>
+        <div className="text-white border-solid border-2 border-white rounded">
           <footer className="text-center text-white mt-3">
             <ReactPaginate
               className="text-white flex justify-center"

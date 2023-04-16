@@ -16,9 +16,11 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import DirectionsBikeIcon from "@mui/icons-material/DirectionsBike";
-import SyncIcon from '@mui/icons-material/Sync';
+import SyncIcon from "@mui/icons-material/Sync";
 import HomeIcon from "@mui/icons-material/Home";
 import { Outlet, Link } from "react-router-dom";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import GitHubIcon from "@mui/icons-material/GitHub";
 
 const drawerWidth = 240;
 
@@ -140,8 +142,7 @@ export default function Root() {
                   justifyContent: open ? "initial" : "center",
                   px: 2.5,
                 }}
-                onClick={() => {
-                }}
+                onClick={() => {}}
               >
                 <ListItemIcon
                   sx={{
@@ -164,8 +165,7 @@ export default function Root() {
                   justifyContent: open ? "initial" : "center",
                   px: 2.5,
                 }}
-                onClick={() => {
-                }}
+                onClick={() => {}}
               >
                 <ListItemIcon
                   sx={{
@@ -176,7 +176,10 @@ export default function Root() {
                 >
                   <DirectionsBikeIcon />
                 </ListItemIcon>
-                <ListItemText primary="Journeys" sx={{ opacity: open ? 1 : 0 }} />
+                <ListItemText
+                  primary="Journeys"
+                  sx={{ opacity: open ? 1 : 0 }}
+                />
               </ListItemButton>
             </Link>
           </ListItem>
@@ -188,8 +191,7 @@ export default function Root() {
                   justifyContent: open ? "initial" : "center",
                   px: 2.5,
                 }}
-                onClick={() => {
-                }}
+                onClick={() => {}}
               >
                 <ListItemIcon
                   sx={{
@@ -200,13 +202,90 @@ export default function Root() {
                 >
                   <SyncIcon />
                 </ListItemIcon>
-                <ListItemText primary="Stations" sx={{ opacity: open ? 1 : 0 }} />
+                <ListItemText
+                  primary="Stations"
+                  sx={{ opacity: open ? 1 : 0 }}
+                />
               </ListItemButton>
             </Link>
           </ListItem>
         </List>
+        <footer className="absolute bottom-0 w-full">
+          <Divider />
+          <List>
+            <ListItem key="LinkedIn" disablePadding sx={{ display: "block" }}>
+              <Link to={`https://www.linkedin.com/in/kallesuikkari/`}>
+                <ListItemButton
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: open ? "initial" : "center",
+                    px: 2.5,
+                  }}
+                  onClick={() => {}}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: open ? 3 : "auto",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <LinkedInIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="LinkedIn"
+                    sx={{ opacity: open ? 1 : 0 }}
+                  />
+                </ListItemButton>
+              </Link>
+            </ListItem>
+            <ListItem key="GitHub" disablePadding sx={{ display: "block" }}>
+              <Link to={`https://github.com/hamburjare`}>
+                <ListItemButton
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: open ? "initial" : "center",
+                    px: 2.5,
+                  }}
+                  onClick={() => {}}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: open ? 3 : "auto",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <GitHubIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="GitHub"
+                    sx={{ opacity: open ? 1 : 0 }}
+                  />
+                </ListItemButton>
+              </Link>
+            </ListItem>
+            <ListItem key="copyright" disablePadding sx={{ display: open ? "block" : "none"  }}>
+              <Divider />
+              {/* If not open dont show */}
+              <ListItemButton
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? "initial" : "center",
+                  px: 2.5,
+                }}
+                onClick={() => {}}
+              >
+                <ListItemText
+                  primary="© 2023 Kalle Suikkari"
+                  sx={{ opacity: open ? 1 : 0, textAlign: "center" }}
+                />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </footer>
       </Drawer>
-      <div className="mt-20 ml-10">
+      <div className="mt-20 mx-10 w-full h-full">
         <Outlet />
       </div>
     </Box>
