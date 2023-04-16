@@ -176,7 +176,7 @@ export default function App() {
       });
   }
 
-  const header = (
+  const header = React.useMemo(() => (
     <div className="mb-3">
       <div className="text-white text-center text-3xl mt-3">Journeys</div>
       <div className="flex justify-center">
@@ -310,7 +310,7 @@ export default function App() {
         </div>
       </div>
     </div>
-  );
+  ));
 
   function Table() {
     if (isUpdating) {
@@ -364,7 +364,12 @@ export default function App() {
       </div>
     );
   } else if (!isLoaded) {
-    return <Loading />;
+    return (
+      <div>
+        {header}
+        <Loading />
+      </div>
+    );
   } else {
     return (
       <div className="">
