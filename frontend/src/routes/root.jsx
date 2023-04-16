@@ -236,6 +236,32 @@ export default function Root() {
               </ListItemButton>
             </Link>
           </ListItem>
+          <ListItem key="AddStation" disablePadding sx={{ display: "block" }}>
+            <Link to={`stations/add`}>
+              <ListItemButton
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? "initial" : "center",
+                  px: 2.5,
+                }}
+                onClick={() => {}}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : "auto",
+                    justifyContent: "center",
+                  }}
+                >
+                  <AddIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Add Station"
+                  sx={{ opacity: open ? 1 : 0 }}
+                />
+              </ListItemButton>
+            </Link>
+          </ListItem>
         </List>
         <footer className="absolute bottom-0 w-full">
           <Divider />
@@ -292,7 +318,11 @@ export default function Root() {
                 </ListItemButton>
               </Link>
             </ListItem>
-            <ListItem key="copyright" disablePadding sx={{ display: open ? "block" : "none"  }}>
+            <ListItem
+              key="copyright"
+              disablePadding
+              sx={{ display: open ? "block" : "none" }}
+            >
               <Divider />
               {/* If not open dont show */}
               <ListItemButton

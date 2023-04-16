@@ -55,14 +55,14 @@ export default function AddJourney() {
     }
 
     const journey = {
-      departureTime,
-      returnTime,
-      departureStationId,
-      departureStationName,
-      returnStationId,
-      returnStationName,
-      coveredDistance,
-      duration,
+      departureTime: departureTime,
+      returnTime: returnTime,
+      departureStationId: departureStationId,
+      departureStationName: departureStationName,
+      returnStationId: returnStationId,
+      returnStationName: returnStationName,
+      coveredDistance: coveredDistance,
+      duration: duration,
     };
 
     axios
