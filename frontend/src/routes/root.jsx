@@ -21,6 +21,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import { Outlet, Link } from "react-router-dom";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import AddIcon from "@mui/icons-material/Add";
 
 const drawerWidth = 240;
 
@@ -204,6 +205,32 @@ export default function Root() {
                 </ListItemIcon>
                 <ListItemText
                   primary="Stations"
+                  sx={{ opacity: open ? 1 : 0 }}
+                />
+              </ListItemButton>
+            </Link>
+          </ListItem>
+          <ListItem key="AddJourney" disablePadding sx={{ display: "block" }}>
+            <Link to={`journeys/add`}>
+              <ListItemButton
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? "initial" : "center",
+                  px: 2.5,
+                }}
+                onClick={() => {}}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : "auto",
+                    justifyContent: "center",
+                  }}
+                >
+                  <AddIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Add Journey"
                   sx={{ opacity: open ? 1 : 0 }}
                 />
               </ListItemButton>

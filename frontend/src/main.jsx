@@ -7,6 +7,7 @@ import ErrorPage from "./error.jsx";
 import Journeys from "./routes/journeys.jsx";
 import Stations from "./routes/stations.jsx";
 import StationView from "./routes/stationView.jsx";
+import AddJourney from "./routes/addJourney.jsx";
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,11 @@ const router = createBrowserRouter([
       {
         path: "journeys",
         element: <Journeys />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "journeys/add",
+        element: <AddJourney />,
         errorElement: <ErrorPage />,
       },
       {
