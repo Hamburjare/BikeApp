@@ -54,69 +54,10 @@ public class ImportData
     public string stationsDBTableName { get; set; } = "Stations";
 
     /// <summary>
-    /// It creates a table.
-    /// </summary>
-    public async Task<bool> CreateTable()
-    {
-        try
-        {
-            _logger.LogInformation("Creating tables...");
-
-            /* Creating a connection to the database. */
-            using var conn = new MySqlConnection(connectionString);
-
-            /* Opening a connection to the database. */
-            try
-            {
-                await conn.OpenAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-            }
-
-            /* Getting all the files in the sql folder that end with .sql */
-            var files = Directory.GetFiles(@"./sql/", "*.sql");
-
-            /* Creating a table in the database. */
-            foreach (var file in files)
-            {
-                using var cmd = conn.CreateCommand();
-                /* Reading the contents of the file and assigning it to the CommandText property of the
-                SqlCommand object. */
-                cmd.CommandText = File.ReadAllText(file);
-
-                cmd.ExecuteNonQuery();
-
-                _logger.LogInformation($"Table from {file} created.");
-            }
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message);
-            return false;
-        }
-    }
-
-    /// <summary>
     /// It imports the data from the csv file into the database.
     /// </summary>
     public async Task ImportJourneysDataAsync()
     {
-        /* Creating a new connection to the database using the connection string. */
-        using var conn = new MySqlConnection(connectionString);
-
-        /* Opening a connection to the database. */
-        try
-        {
-            await conn.OpenAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message);
-        }
-
         var tasks = new List<Task>();
 
         List<string> ids = ReturnStationIds();
@@ -189,7 +130,7 @@ public class ImportData
             await Task.WhenAll(tasks);
 
             /* Inserting the records into the database. */
-            await InsertJourneysAsync(conn, finishedQuery);
+            await InsertJourneysAsync(finishedQuery);
         }
         catch (Exception ex)
         {
@@ -203,7 +144,7 @@ public class ImportData
     /// </summary>
     /// <param name="MySqlConnection">The connection to the database.</param>
     /// <param name="query">A list of strings that contain the queries to be executed.</param>
-    async Task InsertJourneysAsync(MySqlConnection conn, List<string> query)
+    async Task InsertJourneysAsync(List<string> query)
     {
         try
         {
@@ -360,19 +301,6 @@ public class ImportData
 
     public async Task ImportStationsAsync()
     {
-        /* Creating a new connection to the database using the connection string. */
-        using var conn = new MySqlConnection(connectionString);
-
-        /* Opening a connection to the database. */
-        try
-        {
-            await conn.OpenAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message);
-        }
-
         var tasks = new List<Task>();
 
         List<string> finishedQuery = new List<string>();
@@ -444,7 +372,7 @@ public class ImportData
             await Task.WhenAll(tasks);
 
             /* Inserting the records into the database. */
-            await InsertStationsAsync(conn, finishedQuery);
+            await InsertStationsAsync(finishedQuery);
         }
         catch (Exception ex)
         {
@@ -475,9 +403,8 @@ public class ImportData
     /// <summary>
     /// Inserts a list of stations to the database.
     /// </summary>
-    /// <param name="conn">The database connection.</param>
     /// <param name="records">The list of records to insert.</param>
-    private async Task InsertStationsAsync(MySqlConnection conn, List<string> query)
+    private async Task InsertStationsAsync(List<string> query)
     {
         try
         {

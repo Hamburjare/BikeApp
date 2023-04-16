@@ -102,7 +102,7 @@ public class StationService
             if (!string.IsNullOrEmpty(search))
             {
                 query =
-                    $"SELECT * FROM Stations WHERE NameFIN LIKE '%{search}%' OR NameSWE LIKE '%{search}%' OR NameENG LIKE '%{search}%' OR AddressFIN LIKE '%{search}%' OR AddressSWE LIKE '%{search}%' OR CityFIN LIKE '%{search}%' OR CitySWE LIKE '%{search}%' OR Operator LIKE '%{search}%' OR Capacity LIKE '%{search}%' OR Longitude LIKE '%{search}%' OR Latitude LIKE '%{search}%' OR ID LIKE '%{search}%'";
+                    $"SELECT * FROM Stations WHERE NameFIN LIKE '%{search}%' OR NameSWE LIKE '%{search}%' OR NameENG LIKE '%{search}%' OR AddressFIN LIKE '%{search}%' OR AddressSWE LIKE '%{search}%' OR CityFIN LIKE '%{search}%' OR CitySWE LIKE '%{search}%' OR Operator LIKE '%{search}%' OR Capacity LIKE '%{search}%' OR ID LIKE '%{search}%'";
             }
 
             string totalPageQuery = query.Replace("*", "COUNT(*)");
@@ -202,7 +202,7 @@ public class StationService
             List<string> top5ReturnStations = new List<string>();
 
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand("SELECT * FROM Stations WHERE FID = @id", conn);
+            MySqlCommand cmd = new MySqlCommand("SELECT * FROM Stations WHERE ID = @id", conn);
             cmd.Parameters.AddWithValue("@id", id);
             using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
             {

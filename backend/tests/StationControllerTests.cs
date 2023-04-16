@@ -116,7 +116,7 @@ public class StationControllerTests
         var controller = new StationsController();
 
         // Act
-        var result = await controller.GetStation(111, null);
+        var result = await controller.GetStation(001, null);
 
         // Assert
         // okResult.Value is anonymous type
@@ -140,7 +140,7 @@ public class StationControllerTests
         var controller = new StationsController();
 
         // Act
-        var result = await controller.GetStation(111, "may");
+        var result = await controller.GetStation(001, "may");
 
         // Assert
         // okResult.Value is anonymous type
@@ -164,7 +164,7 @@ public class StationControllerTests
         var controller = new StationsController();
 
         // Act
-        var result = await controller.GetStation(111, "mayy");
+        var result = await controller.GetStation(001, "mayy");
 
         // Assert
         // okResult.Value is anonymous type
@@ -188,7 +188,7 @@ public class StationControllerTests
         var controller = new StationsController();
 
         // Act
-        var result = await controller.GetStation(111, null);
+        var result = await controller.GetStation(001, null);
 
         // Assert
         // okResult.Value is anonymous type
