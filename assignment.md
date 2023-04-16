@@ -104,7 +104,7 @@ Focus on the recommended features. For extra points, you might want to also comp
 * [x] Running backend in Docker
 * Running backend in Cloud
 * [x] Implement E2E tests
-* Create UI for adding journeys or bicycle stations
+* [x] Create UI for adding journeys or bicycle stations
 
 ## Returning the exercise
 
