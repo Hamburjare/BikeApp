@@ -3,10 +3,20 @@
 This is a web app for Solita Dev Academy 2023.
 
 ## Technologies
+### Backend
 * Docker
 * MariaDB
-* Dotnet Core 6.0
+* Dotnet 6.0
 * xUnit
+
+### Frontend
+* React
+* Vite
+* Playwright
+* material-ui
+* TailwindCSS
+* PostCSS
+* Leaflet
 
 ## Installation
   1. Clone the repository

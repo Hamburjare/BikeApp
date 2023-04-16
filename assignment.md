@@ -103,7 +103,7 @@ Focus on the recommended features. For extra points, you might want to also comp
 * [x] Endpoints to store new journeys data or new bicycle stations
 * [x] Running backend in Docker
 * Running backend in Cloud
-* Implement E2E tests
+* [x] Implement E2E tests
 * Create UI for adding journeys or bicycle stations
 
 ## Returning the exercise
