@@ -39,7 +39,7 @@ export default function StationView() {
       "december",
     ];
 
-    let uri = `https://localhost:5000/api/stations/${id}`;
+    let uri = `https://backend.hamburjare.tech/api/stations/${id}`;
 
     if (months.includes(e.target.value.toLowerCase())) {
       uri += `?month=${e.target.value}`;
@@ -72,7 +72,7 @@ export default function StationView() {
 
   useEffect(() => {
     const doFetch = async () => {
-      await axios(`https://localhost:5000/api/stations/${id}`)
+      await axios(`https://backend.hamburjare.tech/api/stations/${id}`)
         .then((res) => {
           res.data.station.longitude = res.data.station.longitude.replace(
             ",",

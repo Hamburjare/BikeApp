@@ -30,8 +30,6 @@ if (app.Environment.IsDevelopment())
         .AllowAnyHeader());
 }
 
-app.UseHttpsRedirection();
-
 app.UseAuthorization();
 
 app.MapControllers();

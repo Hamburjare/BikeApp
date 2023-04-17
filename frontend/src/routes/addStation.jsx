@@ -2,7 +2,7 @@ import axios from "axios";
 
 export default function AddStation() {
   function handleAdd() {
-    const stationId = document.getElementById("stationId").value;
+    let stationId = document.getElementById("stationId").value;
     const nameFin = document.getElementById("nameFin").value;
     const nameEng = document.getElementById("nameEng").value;
     const nameSwe = document.getElementById("nameSwe").value;
@@ -64,7 +64,7 @@ export default function AddStation() {
     };
 
     axios
-      .post("https://localhost:5000/api/stations", station)
+      .post("https://backend.hamburjare.tech/api/stations", station)
       .then((res) => {
         alert("Station added successfully, redirecting to stations page...");
         window.location.href = "/stations";
