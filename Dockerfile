@@ -28,13 +28,16 @@ RUN curl -fSL --output dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Runt
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /source
 COPY ./backend .
-RUN dotnet dev-certs https --trust
 RUN dotnet restore "./Backend-BikeApp.csproj" --disable-parallel
 RUN dotnet publish "./Backend-BikeApp.csproj" -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0
 WORKDIR /app
 COPY --from=build /app ./
+# Create self-signed certificate
+RUN dotnet dev-certs https -ep ./https/aspnetapp.pfx -p password
+# Trust the certificate
+RUN dotnet dev-certs https --trust
 
 EXPOSE 5000
 

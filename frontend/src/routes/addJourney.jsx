@@ -66,7 +66,7 @@ export default function AddJourney() {
     };
 
     axios
-      .post("https://localhost:5000/api/journeys", journey)
+      .post("https://backend.hamburjare.tech/api/journeys", journey)
       .then((res) => {
         alert("Journey added. Redirecting to journeys page...");
         window.location.href = "/journeys";

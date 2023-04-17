@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-test('test', async ({ page }) => {
-  await page.goto('http://localhost:5173/');
+test('Test Journeys Add', async ({ page }) => {
+  await page.goto('http://localhost:8000/');
   await page.getByRole('button', { name: 'open drawer' }).click();
   await page.getByRole('button', { name: 'Add Journey' }).click();
   await page.locator('button').nth(1).click();

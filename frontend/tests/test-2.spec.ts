@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-test('test', async ({ page }) => {
-  await page.goto('http://localhost:5173/');
+test('Test Stations list', async ({ page }) => {
+  await page.goto('http://localhost:8000/');
   await page.getByRole('button', { name: 'open drawer' }).click();
   await page.getByRole('button', { name: 'Stations' }).click();
   await page.locator('.css-1r9jet7 > .MuiButtonBase-root').click();

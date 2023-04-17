@@ -44,7 +44,7 @@ export default function App() {
 
   useEffect(() => {
     const doFetch = async () => {
-      await axios("https://localhost:5000/api/journeys")
+      await axios("https://backend.hamburjare.tech/api/journeys")
         .then((res) => {
           setData(res.data.journeys);
           setPageCount(res.data.totalPages);
@@ -130,7 +130,7 @@ export default function App() {
   };
 
   async function fetchJourneys(page) {
-    let uri = `https://localhost:5000/api/journeys?page=${page}&limit=${limit}`;
+    let uri = `https://backend.hamburjare.tech/api/journeys?page=${page}&limit=${limit}`;
 
     if (search && search.length) {
       // check length to avoid sending empty search string
@@ -372,7 +372,7 @@ export default function App() {
     );
   } else {
     return (
-      <div className="">
+      <div className="max-w-full">
         {header}
         <div className="text-white border-solid border-2 border-white rounded">
           <Table data={data} />
