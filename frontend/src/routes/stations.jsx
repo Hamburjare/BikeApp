@@ -38,28 +38,12 @@ export default function App() {
         accessor: "addressSWE",
       },
       {
-        Header: "City (FIN)",
-        accessor: "cityFIN",
-      },
-      {
-        Header: "City (SWE)",
-        accessor: "citySWE",
-      },
-      {
         Header: "Operator",
         accessor: "operator",
       },
       {
         Header: "Capacity",
         accessor: "capacity",
-      },
-      {
-        Header: "Latitude",
-        accessor: "latitude",
-      },
-      {
-        Header: "Longitude",
-        accessor: "longitude",
       },
     ],
     []
