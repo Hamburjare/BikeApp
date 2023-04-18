@@ -43,8 +43,8 @@ Dataset for bike stations:
 ## Technologies
 
 ### Cloud
-* Hetzner Cloud
-* Cloudflare Zero Trust
+* Hetzner Cloud - Cloud provider
+* Cloudflare Zero Trust - Security
 
 ### Backend
 * Docker - Containerization
