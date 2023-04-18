@@ -150,9 +150,6 @@ public class StationService
             conn.Close();
         }
 
-        if (stations.Count == 0)
-            return new NotFoundResult();
-
         return new OkObjectResult(new { stations, totalPages });
     }
 

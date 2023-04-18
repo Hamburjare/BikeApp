@@ -83,6 +83,7 @@ export default function App() {
     handleLimit(document.getElementById("limit").value);
     search = event;
     setIsLoaded(false);
+    setError(null);
   };
 
   const handleOrderDir = (event) => {
@@ -127,6 +128,7 @@ export default function App() {
     minDistance = 0;
     limit = 10;
     setIsLoaded(false);
+    setError(null);
   };
 
   async function fetchJourneys(page) {
@@ -316,6 +318,11 @@ export default function App() {
     if (isUpdating) {
       return <Loading />;
     }
+    if (data.length === 0) {
+      return (
+        <div className="text-white text-center text-3xl mt-3">No Data</div>
+      );
+    }
     return (
       <table className="w-full" {...getTableProps()}>
         <thead>
@@ -360,7 +367,7 @@ export default function App() {
     return (
       <div>
         {header}
-        <div className="text-white">Error: {error.message}</div>
+        <div className="text-white text-center">Error: {error.message}</div>
       </div>
     );
   } else if (!isLoaded) {
@@ -375,9 +382,7 @@ export default function App() {
       <div className="max-w-full">
         {header}
         <div className="text-white border-solid border-2 border-white rounded">
-          <Table data={data} />
-        </div>
-        <div className="text-white border-solid border-2 border-white rounded">
+          <Table />
           <footer className="text-center text-white mt-3">
             <ReactPaginate
               className="text-white flex justify-center"
@@ -393,6 +398,7 @@ export default function App() {
               previousLabel="< previous"
               renderOnZeroPageCount={null}
               activeClassName="border-2 border-white rounded p-2"
+              disabledClassName="hidden"
             />
           </footer>
         </div>
