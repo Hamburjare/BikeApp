@@ -1,4 +1,32 @@
 # Bike App
+
+## Contents
+- [Bike App](#bike-app)
+  - [Contents](#contents)
+  - [Description](#description)
+  - [Data](#data)
+  - [Technologies](#technologies)
+    - [Cloud](#cloud)
+    - [Backend](#backend)
+    - [Frontend](#frontend)
+  - [Configuration](#configuration)
+    - [Frontend](#frontend-1)
+    - [Backend](#backend-1)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Frontend](#frontend-2)
+    - [Backend](#backend-2)
+  - [Tests](#tests)
+    - [Backend](#backend-3)
+    - [Frontend](#frontend-3)
+  - [API](#api)
+  - [TODO](#todo)
+    - [Data import](#data-import)
+    - [Journey list view](#journey-list-view)
+    - [Station list](#station-list)
+    - [Single station view](#single-station-view)
+    - [More](#more)
+
 ## Description
 This is a web app that displays bike journeys and bike station information in Helsinki. The app is built with React and .NET 6.0. The backend is a REST API that uses MariaDB as a database. The frontend is a single page application that uses Vite as a build tool and TailwindCSS as a CSS framework. The app is dockerized and can be run with a couple commands. The app is deployed to Hetzner Cloud and can be accessed [here](https://bikeapp.hamburjare.tech/). The app is also protected with Cloudflare. If you wish to play with the backend, you can find the API documentation [here](https://backend.hamburjare.tech/swagger/index.html).
 
@@ -87,7 +115,7 @@ Dataset for bike stations:
   NOTE: You must have the database running and populated in order to run the tests.
 
 ### Frontend
-  You can run the tests by running the following command after you have successfully started docker container(s) [(step 6)](#installation):
+  You can run the tests by running the following command outside of the docker container in the root directory after you have successfully started docker container(s) [(step 6)](#installation):
   Make sure you have Node.js installed. You can find the installation instructions [here](https://nodejs.org/en/download/). Then run the following commands:
   ```bash
   cd frontend
