@@ -11,6 +11,7 @@
     - [Frontend](#frontend)
   - [Configuration](#configuration)
     - [Frontend](#frontend-1)
+    - [csvimport](#csvimport)
     - [Backend](#backend-1)
   - [Installation](#installation)
   - [Usage](#usage)
@@ -28,7 +29,7 @@
     - [More](#more)
 
 ## Description
-This is a web app that displays bike journeys and bike station information in Helsinki. The app is built with React and .NET 6.0. The backend is a REST API that uses MariaDB as a database. The frontend is a single page application that uses Vite as a build tool and TailwindCSS as a CSS framework. The app is dockerized and can be run with a couple commands. The app is deployed to Hetzner Cloud and can be accessed [here](https://bikeapp.hamburjare.tech/). The app is also protected with Cloudflare. If you wish to play with the backend, you can find the API documentation [here](https://backend.hamburjare.tech/swagger/index.html).
+This is a web app that displays bike journeys and bike station information in Helsinki. The app is built with React and .NET 6.0. The backend is a REST API that uses MariaDB as a database. The frontend is a single page application that uses Vite as a build tool and TailwindCSS as a CSS framework. The app is dockerized and can be run with single command. The app is deployed to Hetzner Cloud and can be accessed [here](https://bikeapp.hamburjare.tech/). The app is also protected with Cloudflare. If you wish to play with the backend, you can find the API documentation [here](https://backend.hamburjare.tech/swagger/index.html).
 
 ## Data
 The data that is used in this web app is owned by City Bike Finland.
@@ -67,12 +68,22 @@ Dataset for bike stations:
 
 
 ## Configuration
-You don't need to configure anything to run the app. The app is dockerized and can be run with a couple commands. However, if you wish to change the configuration, you can do so by changing the environment variables.
+You don't need to configure anything to run the app. The app is dockerized and can be run with single command. However, if you wish to change the configuration, you can do so by changing the environment variables.
 
 ### Frontend 
   You can change the values of the environment variables in the ``docker-compose.yml`` file.
 
   * ``VITE_API_URL``: The URL of the backend API. Default value is ``http://localhost:5000/api``.
+
+### csvimport
+  You can change the database connection string in the ``csvimport/src/ImportData.cs`` file.
+
+  * When you run ```docker logs import``` you can see the progress of the data import. If you see the following message ```Unable to connect to any of the specified MySQL hosts.```, it means that you have to change the database connection string's ```host.docker.internal``` to your IP address.
+  * After you have changed the database connection string, you have to restart the docker container. You can do so by running the following command in the root folder of the project:
+  
+    ```bash
+    docker-compose restart import
+    ```
 
 ### Backend
   You can change the values of the environment variables in the ``docker-compose.yml`` file. And you can change the database connection string in the ``backend/Services/MySQLHelper.cs`` file.
@@ -81,23 +92,28 @@ You don't need to configure anything to run the app. The app is dockerized and c
   * You can change the database root password in the ``docker-compose.yml`` file. Under the ``db`` service, change the ``MARIADB_ROOT_PASSWORD`` variable. Default value is ``Abc123``. Remember to change the password in the ``connectionString`` variable as well.
   * You can change the database name in the ``docker-compose.yml`` file. Under the ``db`` service, change the ``MARIADB_DATABASE`` variable. Default value is ``bikeapp``. Remember to change the database name in the ``connectionString`` variable as well.
   * All the ports etc. are configured in the ``docker-compose.yml`` file.
+  * If you go to [http://localhost:5000/api/stations](http://localhost:5000/api/stations) in your browser, and you see the following message ``Unable to connect to any of the specified MySQL hosts.``, it means that you have to change the database connection string's ``host.docker.internal`` to your IP address.
+  * After you have changed the database connection string, you have to rebuild the docker image. You can do so by running the following command in the root folder of the project:
+  
+    ```bash
+    docker-compose up -d --build
+    ```
 
 ## Installation
   1. Clone the repository
-  2. Make sure you have .NET Core SDK 6.0 installed. You can find the installation instructions [here](https://dotnet.microsoft.com/en-us/download/dotnet/6.0).
-  3. Run the following command in the ``csvimport`` folder of the project and wait for the script to finish:
-  
-    dotnet run
-    
-  4. Make sure you have docker installed. You can find the installation instructions [here](https://docs.docker.com/get-docker/).
-  5. Make sure you have docker-compose installed. You can find the installation instructions [here](https://docs.docker.com/compose/install/).
-  6. Run the following command in the root folder of the project:
+  2. Make sure you have docker installed. You can find the installation instructions [here](https://docs.docker.com/get-docker/).
+  3. Make sure you have docker-compose installed. You can find the installation instructions [here](https://docs.docker.com/compose/install/).
+  4. Run the following command in the root folder of the project:
   
     docker-compose up -d
     
-  7. Wait for the docker container(s) to start. It can take a while the first time you run it.
-  8. Open the browser and go to [http://localhost:5000/swagger](http://localhost:5000/swagger) to play with the API.
-  9. Open the browser and go to [http://localhost:8000](http://localhost:8000) to play with the web app.
+  5. Wait for the docker container(s) to start. It can take a while the first time you run it.
+  6. Database population can take a while. You can check the progress by running the following command:
+  
+    docker logs import
+
+  7. Open the browser and go to [http://localhost:5000/swagger](http://localhost:5000/swagger) to play with the API.
+  8. Open the browser and go to [http://localhost:8000](http://localhost:8000) to play with the web app.
 
 ## Usage
   ### Frontend

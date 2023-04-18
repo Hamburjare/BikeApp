@@ -11,6 +11,10 @@ namespace csvimport;
 
 public class ImportData
 {
+    // Connection string to the database.
+    public string? connectionString =
+        "Server=host.docker.internal;Port=3306;User ID=root;Password=Abc123;Database=bikeapp; default command timeout=600;";
+
     private readonly ILogger<ImportData> _logger;
 
     public ImportData(ILogger<ImportData> logger)
@@ -20,22 +24,19 @@ public class ImportData
 
     public async Task ExecuteAsync()
     {
-        // _logger.LogInformation("Starting import...");
-        // /* Creating a table(s) in the database. */
-        // bool success = await CreateTable();
-        // if (!success)
-        // {
-        //     _logger.LogError("Failed to create a table(s) in the database!");
-        //     return;
-        // }
+        _logger.LogInformation("Starting import...");
+        /* Creating a table(s) in the database. */
+        bool success = await CreateTable();
+        if (!success)
+        {
+            _logger.LogError("Failed to create a table(s) in the database!");
+            return;
+        }
 
         await ImportStationsAsync();
         await ImportJourneysDataAsync();
+        _logger.LogInformation("Import finished.");
     }
-
-    /* Getting the connection string from the environment variable. */
-    public string? connectionString =
-        "Server=host.docker.internal;Port=3306;User ID=root;Password=Abc123;Database=bikeapp; default command timeout=600;";
 
     public List<string> journeyCSVs = new List<string>()
     {
@@ -53,7 +54,52 @@ public class ImportData
 
     public string stationsDBTableName { get; set; } = "Stations";
 
-    int count = 0;
+    public async Task<bool> CreateTable()
+    {
+        try
+        {
+            Console.WriteLine("Creating tables...");
+            _logger.LogInformation("Creating tables...");
+
+            /* Creating a connection to the database. */
+            using var conn = new MySqlConnection(connectionString);
+
+            /* Opening a connection to the database. */
+            try
+            {
+                conn.Open();
+                await conn.OpenAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message);
+            }
+
+            /* Getting all the files in the sql folder that end with .sql */
+            var files = Directory.GetFiles(@"./sql/", "*.sql");
+
+            /* Creating a table in the database. */
+            foreach (var file in files)
+            {
+                using var cmd = conn.CreateCommand();
+                /* Reading the contents of the file and assigning it to the CommandText property of the
+                SqlCommand object. */
+                cmd.CommandText = File.ReadAllText(file);
+                cmd.ExecuteNonQuery();
+
+                Console.WriteLine($"Table from {file} created.");
+                _logger.LogInformation($"Table from {file} created.");
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            _logger.LogError(ex.Message);
+            return false;
+        }
+    }
 
     /// <summary>
     /// It imports the data from the csv file into the database.
@@ -123,8 +169,6 @@ public class ImportData
 
                     _logger.LogInformation($"File: {url} imported.");
                     _logger.LogInformation($"Total valid records: {count} in file {url}.");
-                    await InsertJourneysAsync(finishedQuery);
-                    finishedQuery.Clear();
                 })
             );
         }
@@ -132,6 +176,7 @@ public class ImportData
         try
         {
             await Task.WhenAll(tasks);
+            await InsertJourneysAsync(finishedQuery);
         }
         catch (Exception ex)
         {
@@ -149,12 +194,18 @@ public class ImportData
     {
         try
         {
+            using var connection = new MySqlConnection(connectionString);
+            await connection.OpenAsync();
             string sql =
                 $"INSERT INTO {journeysDBTableName} (DepartureTime, ReturnTime, DepartureStationId, DepartureStationName, ReturnStationId, ReturnStationName, CoveredDistance, Duration) VALUES "
                 + string.Join(",", query);
 
-            await File.WriteAllTextAsync(@$"./sql/journeysitems{count}.sql", sql);
-            count += 1;
+            using var cmd = new MySqlCommand(sql, connection);
+            await cmd.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Journeys inserted into the database.");
+
+            // await File.WriteAllTextAsync(@$"./sql/journeysitems{count}.sql", sql);
         }
         catch (Exception ex)
         {
@@ -409,11 +460,15 @@ public class ImportData
     {
         try
         {
+            var connection = new MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
             string sql =
                 $"INSERT INTO {stationsDBTableName} (FID, ID, NameFIN, NameSWE, NameENG, AddressFIN, AddressSWE, CityFIN, CitySWE, Operator, Capacity, Longitude, Latitude) VALUES "
                 + string.Join(",", query);
 
-            await File.WriteAllTextAsync(@"./sql/stationsitems.sql", sql);
+            using var cmd = new MySqlCommand(sql, connection);
+            await cmd.ExecuteNonQueryAsync();
         }
         catch (Exception ex)
         {

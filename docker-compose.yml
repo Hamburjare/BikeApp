@@ -17,7 +17,6 @@ services:
       - '3306:3306'
     volumes:
       - dbdata:/var/lib/mysql
-      - ./csvimport/sql:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD' ]
       interval: 1m
@@ -26,6 +25,19 @@ services:
       start_period: 1m
     networks:
       - back-tier
+  import:
+    image: mcr.microsoft.com/dotnet/sdk:6.0
+    container_name: import
+    restart: "no"
+    volumes:
+      - ./csvimport:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - back-tier
+    working_dir: /app
+    command: sh -c "dotnet restore  && dotnet run"
 
   frontend:
     image: node:alpine
