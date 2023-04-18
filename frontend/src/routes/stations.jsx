@@ -51,7 +51,7 @@ export default function App() {
 
   useEffect(() => {
     const doFetch = async () => {
-      await axios("https://backend.hamburjare.tech/api/stations")
+      await axios(`${import.meta.env.VITE_API_URL}/stations`)
         .then((res) => {
           setData(res.data.stations);
           setPageCount(res.data.totalPages);
@@ -95,7 +95,7 @@ export default function App() {
   };
 
   async function fetchData(page) {
-    let uri = `https://backend.hamburjare.tech/api/stations?page=${page}&limit=${limit}`;
+    let uri = `${import.meta.env.VITE_API_URL}/stations?page=${page}&limit=${limit}`;
 
     if (search && search.length) {
       // check length to avoid sending empty search string
@@ -248,9 +248,9 @@ export default function App() {
     );
   } else {
     return (
-      <div className="w-full">
+      <div className="w-fit mx-auto">
         {header}
-        <div className="text-white border-solid border-2 border-white rounded">
+        <div className="text-white border-solid border-2 border-white rounded w-fit mx-auto">
           <Table />
           <footer className="text-center text-white mt-3">
             <ReactPaginate

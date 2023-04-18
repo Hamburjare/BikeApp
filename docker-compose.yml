@@ -35,6 +35,8 @@ services:
       - '8000:8000'
     volumes:
       - ./frontend:/app
+    environment:
+      - VITE_API_URL=https://backend.hamburjare.tech/api
     working_dir: /app
     command: sh -c "npm install && npm run dev"
     depends_on:

@@ -39,7 +39,7 @@ export default function StationView() {
       "december",
     ];
 
-    let uri = `https://backend.hamburjare.tech/api/stations/${id}`;
+    let uri = `${import.meta.env.VITE_API_URL}/stations/${id}`;
 
     if (months.includes(e.target.value.toLowerCase())) {
       uri += `?month=${e.target.value}`;
@@ -72,7 +72,7 @@ export default function StationView() {
 
   useEffect(() => {
     const doFetch = async () => {
-      await axios(`https://backend.hamburjare.tech/api/stations/${id}`)
+      await axios(`${import.meta.env.VITE_API_URL}/stations/${id}`)
         .then((res) => {
           res.data.station.longitude = res.data.station.longitude.replace(
             ",",
@@ -158,7 +158,7 @@ export default function StationView() {
     return <Loading />;
   } else {
     return (
-      <div>
+      <div className="w-fit mx-auto">
         <h1 className="text-center text-3xl mb-2 text-white">Station view</h1>
         <div className="flex justify-center">
           <div className="flex flex-col mr-3">
