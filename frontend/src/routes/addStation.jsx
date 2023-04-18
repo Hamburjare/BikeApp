@@ -64,7 +64,7 @@ export default function AddStation() {
     };
 
     axios
-      .post("https://backend.hamburjare.tech/api/stations", station)
+      .post(`${import.meta.env.VITE_API_URL}/stations`, station)
       .then((res) => {
         alert("Station added successfully, redirecting to stations page...");
         window.location.href = "/stations";

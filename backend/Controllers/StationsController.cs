@@ -12,7 +12,14 @@ namespace Backend_BikeApp.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class StationsController : ControllerBase {
-        // GET: api/Stations
+
+        /// <summary>
+        /// Get all stations
+        /// </summary>
+        /// <param name="page">Page number</param>
+        /// <param name="limit">Number of items per page</param>
+        /// <param name="search">Search string</param>
+        /// <returns></returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Station>>> GetStationItems(
             int? page,
