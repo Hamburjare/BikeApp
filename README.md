@@ -67,6 +67,7 @@ Dataset for bike stations:
 
 
 ## Configuration
+You don't need to configure anything to run the app. The app is dockerized and can be run with a couple commands. However, if you wish to change the configuration, you can do so by changing the environment variables.
 
 ### Frontend 
   You can change the values of the environment variables in the ``docker-compose.yml`` file.
