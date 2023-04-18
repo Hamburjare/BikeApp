@@ -82,6 +82,7 @@ export default function App() {
     handleLimit(document.getElementById("limit").value);
     search = event;
     setIsLoaded(false);
+    setError(null);
   };
 
   const handleReset = () => {
@@ -90,6 +91,7 @@ export default function App() {
     search = null;
     limit = 10;
     setIsLoaded(false);
+    setError(null);
   };
 
   async function fetchData(page) {
@@ -176,6 +178,10 @@ export default function App() {
     if (isUpdating) {
       return <Loading />;
     }
+    if (data.length === 0) {
+      return <div className="text-white text-center text-3xl mt-3">No data</div>;
+    }
+
     return (
       <table className="w-full" {...getTableProps()}>
         <thead>
@@ -230,7 +236,7 @@ export default function App() {
     return (
       <div>
         {header}
-        <div className="text-white">Error: {error.message}</div>
+        <div className="text-white text-center">Error: {error.message}</div>
       </div>
     );
   } else if (!isLoaded) {
@@ -261,6 +267,7 @@ export default function App() {
               previousLabel="< previous"
               renderOnZeroPageCount={null}
               activeClassName="border-2 border-white rounded p-2"
+              disabledClassName="hidden"
             />
           </footer>
         </div>

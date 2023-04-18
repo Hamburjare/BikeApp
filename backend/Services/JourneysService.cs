@@ -253,9 +253,6 @@ public class JourneyService
             conn.Close();
         }
 
-        if (journeys.Count == 0)
-            return new NotFoundResult();
-
         return new OkObjectResult(new { journeys, totalPages });
     }
 

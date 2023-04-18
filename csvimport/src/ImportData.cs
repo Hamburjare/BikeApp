@@ -53,6 +53,8 @@ public class ImportData
 
     public string stationsDBTableName { get; set; } = "Stations";
 
+    int count = 0;
+
     /// <summary>
     /// It imports the data from the csv file into the database.
     /// </summary>
@@ -121,6 +123,8 @@ public class ImportData
 
                     _logger.LogInformation($"File: {url} imported.");
                     _logger.LogInformation($"Total valid records: {count} in file {url}.");
+                    await InsertJourneysAsync(finishedQuery);
+                    finishedQuery.Clear();
                 })
             );
         }
@@ -128,9 +132,6 @@ public class ImportData
         try
         {
             await Task.WhenAll(tasks);
-
-            /* Inserting the records into the database. */
-            await InsertJourneysAsync(finishedQuery);
         }
         catch (Exception ex)
         {
@@ -152,8 +153,8 @@ public class ImportData
                 $"INSERT INTO {journeysDBTableName} (DepartureTime, ReturnTime, DepartureStationId, DepartureStationName, ReturnStationId, ReturnStationName, CoveredDistance, Duration) VALUES "
                 + string.Join(",", query);
 
-            await File.WriteAllTextAsync(@"./sql/journeysitems.sql", sql);
-
+            await File.WriteAllTextAsync(@$"./sql/journeysitems{count}.sql", sql);
+            count += 1;
         }
         catch (Exception ex)
         {
@@ -408,13 +409,11 @@ public class ImportData
     {
         try
         {
-
             string sql =
                 $"INSERT INTO {stationsDBTableName} (FID, ID, NameFIN, NameSWE, NameENG, AddressFIN, AddressSWE, CityFIN, CitySWE, Operator, Capacity, Longitude, Latitude) VALUES "
                 + string.Join(",", query);
-            
-            await File.WriteAllTextAsync(@"./sql/stationsitems.sql", sql);
 
+            await File.WriteAllTextAsync(@"./sql/stationsitems.sql", sql);
         }
         catch (Exception ex)
         {
