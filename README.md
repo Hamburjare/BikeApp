@@ -78,12 +78,6 @@ You don't need to configure anything to run the app. The app is dockerized and c
 ### csvimport
   You can change the database connection string in the ``csvimport/src/ImportData.cs`` file.
 
-  * When you run ```docker logs import``` you can see the progress of the data import. If you see the following message ```Unable to connect to any of the specified MySQL hosts.```, it means that you have to change the database connection string's ```host.docker.internal``` to your IP address.
-  * After you have changed the database connection string, you have to restart the docker container. You can do so by running the following command in the root folder of the project:
-  
-    ```bash
-    docker-compose restart import
-    ```
 
 ### Backend
   You can change the values of the environment variables in the ``docker-compose.yml`` file. And you can change the database connection string in the ``backend/Services/MySQLHelper.cs`` file.
@@ -92,7 +86,6 @@ You don't need to configure anything to run the app. The app is dockerized and c
   * You can change the database root password in the ``docker-compose.yml`` file. Under the ``db`` service, change the ``MARIADB_ROOT_PASSWORD`` variable. Default value is ``Abc123``. Remember to change the password in the ``connectionString`` variable as well.
   * You can change the database name in the ``docker-compose.yml`` file. Under the ``db`` service, change the ``MARIADB_DATABASE`` variable. Default value is ``bikeapp``. Remember to change the database name in the ``connectionString`` variable as well.
   * All the ports etc. are configured in the ``docker-compose.yml`` file.
-  * If you go to [http://localhost:5000/api/stations](http://localhost:5000/api/stations) in your browser, and you see the following message ``Unable to connect to any of the specified MySQL hosts.``, it means that you have to change the database connection string's ``host.docker.internal`` to your IP address.
   * After you have changed the database connection string, you have to rebuild the docker image. You can do so by running the following command in the root folder of the project:
   
     ```bash
