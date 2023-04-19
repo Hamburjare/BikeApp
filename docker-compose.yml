@@ -26,6 +26,8 @@ services:
     networks:
       - back-tier
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max_allowed_packet=500M
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     
   import:
     image: mcr.microsoft.com/dotnet/sdk:6.0
@@ -40,6 +42,8 @@ services:
       - back-tier
     working_dir: /app
     command: sh -c "dotnet restore  && dotnet run"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   frontend:
     image: node:alpine
@@ -57,7 +61,9 @@ services:
       backend:
         condition: service_healthy
     networks:
-      - back-tier      
+      - back-tier
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   backend:
     build: 
@@ -85,6 +91,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 1m
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 
 
