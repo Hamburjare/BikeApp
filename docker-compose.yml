@@ -25,6 +25,8 @@ services:
       start_period: 1m
     networks:
       - back-tier
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max_allowed_packet=500M
+    
   import:
     image: mcr.microsoft.com/dotnet/sdk:6.0
     container_name: import
@@ -55,8 +57,7 @@ services:
       backend:
         condition: service_healthy
     networks:
-      - back-tier
-      
+      - back-tier      
 
   backend:
     build: 

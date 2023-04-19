@@ -13,7 +13,7 @@ public class ImportData
 {
     // Connection string to the database.
     public string? connectionString =
-        "Server=host.docker.internal;Port=3306;User ID=root;Password=Abc123;Database=bikeapp; default command timeout=600;";
+        "Server=host.docker.internal;Port=3306;User ID=root;Password=Abc123;Database=bikeapp; ConnectionTimeout=0; DefaultCommandTimeout=0;";
 
     private readonly ILogger<ImportData> _logger;
 
@@ -68,7 +68,6 @@ public class ImportData
             try
             {
                 conn.Open();
-                await conn.OpenAsync();
             }
             catch (Exception ex)
             {
@@ -86,7 +85,7 @@ public class ImportData
                 /* Reading the contents of the file and assigning it to the CommandText property of the
                 SqlCommand object. */
                 cmd.CommandText = File.ReadAllText(file);
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
 
                 Console.WriteLine($"Table from {file} created.");
                 _logger.LogInformation($"Table from {file} created.");
@@ -167,7 +166,6 @@ public class ImportData
 
                     records.Clear();
 
-                    _logger.LogInformation($"File: {url} imported.");
                     _logger.LogInformation($"Total valid records: {count} in file {url}.");
                 })
             );
@@ -405,7 +403,7 @@ public class ImportData
                                 count++;
                             }
                         }
-                        _logger.LogInformation($"File: {url} read.");
+                        _logger.LogInformation($"Url: {url} read.");
                     }
 
                     query = StationsBatchAsync(query, records);
@@ -413,7 +411,6 @@ public class ImportData
 
                     records.Clear();
 
-                    _logger.LogInformation($"File: {url} imported.");
                     _logger.LogInformation($"Total valid records: {count} in file {url}.");
                 })
             );
