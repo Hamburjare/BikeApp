@@ -1,35 +1,31 @@
 using Backend_BikeApp.Models;
+using Backend_BikeApp.Helpers;
 using MySqlConnector;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_BikeApp.Services;
 
+/// <summary>
+/// The class contains functions for interacting with the Stations table in the MySQL database.
+/// </summary>
+
 public class StationService
 {
-    static List<string> ReturnStationIds()
-    {
-        using var conn = new MySqlConnection(MySQLHelper.connectionString);
-        try
-        {
-            conn.Open();
-        }
-        catch (MySqlException ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"SELECT ID FROM Stations;";
-        using var reader = cmd.ExecuteReader();
-        var ids = new List<string>();
-        while (reader.Read())
-        {
-            ids.Add(reader.GetString(0));
-        }
-        return ids;
-    }
+    
 
+    /// <summary>
+    /// The function takes a Station record as input and returns a boolean value indicating whether the
+    /// record is valid or not.
+    /// </summary>
+    /// <param name="record">A Station record.</param>
+    /// <returns>A boolean value indicating whether the record is valid or not.</returns>
     static bool ValidateStation(Station record)
     {
+        /* The above code is performing data validation checks on a record object. It checks if the
+        record's FID, Capacity, Longitude, and Latitude properties can be parsed as integers or
+        doubles, and if they fall within certain ranges. It also checks if the record's ID, NameFIN,
+        NameENG, NameSWE, AddressFIN, AddressSWE, CityFIN, CitySWE, and Operator properties are not
+        null or empty. If any of these checks fail, the if statement will evaluate to true. */
         if (
             !int.TryParse(record.FID.ToString(), out int number)
             || !int.TryParse(record.Capacity.ToString(), out number)
@@ -57,7 +53,6 @@ public class StationService
             || string.IsNullOrWhiteSpace(record.CitySWE)
             || record.Operator == null
             || string.IsNullOrWhiteSpace(record.Operator)
-
         )
         {
             return false;
@@ -72,17 +67,33 @@ public class StationService
     /// <param name="page">The page number to return.</param>
     /// <param name="search">The search string to filter the results.</param>
     /// <param name="limit">The limit of the results to return.</param>
+    /// <returns>A list of stations.</returns>
     public static async Task<ActionResult<IEnumerable<Station>>> GetStationsAsync(
         string page,
         string search,
         string limit
     )
     {
+        // Storing the total number of pages in the database.
         int totalPages = 0;
+
+        // Creating a new List object to store the stations.
         List<Station> stations = new List<Station>();
+
+        // Connecting to the database.
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
-            conn.Open();
+            // tries to open the connection to the database.
+            try
+            {
+                conn.Open();
+            }
+            catch (MySqlException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            // If page, search or limit is null, it will be set to default values.
             if (page == null || !int.TryParse(page, out int pageNo) || pageNo < 1)
             {
                 pageNo = 1;
@@ -92,24 +103,30 @@ public class StationService
             if (pageNo < 0)
                 pageNo = 0;
 
+
             if (limit == null || !int.TryParse(limit, out int limitNo) || limitNo < 1)
             {
                 limitNo = 10;
             }
 
+            /* Query for getting data from database */
             string query = $"SELECT * FROM Stations";
-
+            
             if (!string.IsNullOrEmpty(search))
             {
                 query =
                     $"SELECT * FROM Stations WHERE NameFIN LIKE '%{search}%' OR NameSWE LIKE '%{search}%' OR NameENG LIKE '%{search}%' OR AddressFIN LIKE '%{search}%' OR AddressSWE LIKE '%{search}%' OR CityFIN LIKE '%{search}%' OR CitySWE LIKE '%{search}%' OR Operator LIKE '%{search}%' OR Capacity LIKE '%{search}%' OR ID LIKE '%{search}%'";
             }
 
+            /* Query for getting the total number of pages in the database. */
             string totalPageQuery = query.Replace("*", "COUNT(*)");
 
+            /* Adding the LIMIT and OFFSET clauses to the query string. */
             query += $" LIMIT {limitNo} OFFSET {pageNo * limitNo}";
 
             MySqlCommand cmd = new MySqlCommand(query, conn);
+
+            // Executing the query and storing the result set.
             using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
@@ -134,6 +151,7 @@ public class StationService
                 }
             }
 
+            // Getting the total number of pages in the database. Using given limit and offset. 
             cmd = new MySqlCommand(totalPageQuery, conn);
             using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
             {
@@ -157,13 +175,14 @@ public class StationService
     /// It returns a station by id, and it's asynchronous
     /// </summary>
     /// <param name="id">The id of the station to return.</param>
+    /// <param name="month">The month to filter stats by</param>
+    /// <returns>A station with the given id.</returns>
 
     public static async Task<ActionResult<Station>> GetStationAsync(int id, string month)
     {
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
-            // if month is not null, then convert it to number
-            // if month is not null, then filter by month
+            // If month is not null, it will be converted to a number.
             if (month != null)
             {
                 string[] months = new string[]
@@ -190,11 +209,18 @@ public class StationService
                 }
             }
 
+            // New station object
             Station station = null!;
+
+            // Variables for storing the number of departures and returns from the station
             int departureJourneys = 0;
             int returnJourneys = 0;
+
+            // Variables for storing the average distance of departures and returns from the station
             float avarageDepartureDistance = 0;
             float avarageReturnDistance = 0;
+            
+            // Variables for storing the top 5 departure and return stations from the station
             List<string> top5DepartureStations = new List<string>();
             List<string> top5ReturnStations = new List<string>();
 
@@ -387,13 +413,20 @@ public class StationService
         }
     }
 
+    /// <summary>
+    /// Updates a station with the given ID and information.
+    /// </summary>
+    /// <param name="id">The ID of the station to update.</param>
+    /// <param name="station">The station object containing the new information.</param>
     public static async Task<IActionResult> PutStationAsync(int id, Station station)
     {
+        // Check that the given id matches the id in the station object
         if (id != station.FID)
         {
             return new BadRequestResult();
         }
-
+        
+        // Check that the station object is valid
         if (ValidateStation(station) == false)
         {
             return new BadRequestResult();
@@ -425,14 +458,20 @@ public class StationService
         return new OkObjectResult(station);
     }
 
+    /// <summary>
+    /// Posts a new station to the database asynchronously.
+    /// </summary>
+    /// <param name="station">The station object to post.</param>
     public static async Task<ActionResult<Station>> PostStationAsync(Station station)
     {
-        List<string> ids = ReturnStationIds();
+        // Checks if the station already exists
+        List<string> ids = StationIds.ReturnStationIds();
         if (ids.Contains(station.ID!.ToString()))
         {
             return null!;
         }
 
+        // Check that the station object is valid
         if (ValidateStation(station) == false)
             return null!;
 
@@ -480,6 +519,10 @@ public class StationService
         );
     }
 
+    /// <summary>
+    /// Deletes a station with the given ID from the database.
+    /// </summary>
+    /// <param name="id">The ID of the station to delete.</param>
     public static async Task<IActionResult> DeleteStationAsync(int id)
     {
         using var conn = new MySqlConnection(MySQLHelper.connectionString);

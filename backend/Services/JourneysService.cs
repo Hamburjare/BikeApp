@@ -1,37 +1,26 @@
 using Backend_BikeApp.Models;
+using Backend_BikeApp.Helpers;
 using MySqlConnector;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_BikeApp.Services;
 
+/// <summary>
+/// The class contains functions for interacting with the Journeys table in the MySQL database.
+/// </summary>
+
 public class JourneyService
 {
-    static List<string> ReturnStationIds()
-    {
-        using var conn = new MySqlConnection(MySQLHelper.connectionString);
-        try
-        {
-            conn.Open();
-        }
-        catch (MySqlException ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"SELECT ID FROM Stations;";
-        using var reader = cmd.ExecuteReader();
-        var ids = new List<string>();
-        while (reader.Read())
-        {
-            ids.Add(reader.GetString(0));
-        }
-        return ids;
-    }
-
+    /// <summary>
+    /// Validates a journey record.
+    /// </summary>
+    /// <param name="record">The journey record to validate.</param>
+    /// <returns>True if the record is valid, false otherwise.</returns>
     static bool ValidateJourney(Journey record)
     {
-        List<string> ids = ReturnStationIds();
-
+        List<string> ids = StationIds.ReturnStationIds();
+        
+        // Check if the station IDs are valid.
         if (!ids.Contains(record.DepartureStationId!))
         {
             return false;
@@ -41,7 +30,15 @@ public class JourneyService
         {
             return false;
         }
+        
 
+        /* The above code is performing data validation checks on a record object. It checks if the
+        CoveredDistance and Duration properties of the record object can be parsed as integers, and
+        if their values are greater than or equal to 10. It also checks if the DepartureTime and
+        ReturnTime properties of the record object are not default values and if the ReturnTime is
+        greater than or equal to the DepartureTime. Additionally, it checks if the
+        DepartureStationId and ReturnStationId properties of the record object are greater than or
+        equal to 0. If any of these conditions are not met, the if */
         if (
             !int.TryParse(record.CoveredDistance.ToString(), out int number)
             || !int.TryParse(record.Duration.ToString(), out number)
@@ -297,13 +294,16 @@ public class JourneyService
     /// </summary>
     /// <param name="id">The id of the journey to update.</param>
     /// <param name="journey">The journey to update.</param>
+    /// <returns>OkObjectResult if the journey is updated, BadRequestResult otherwise.</returns>
     public static async Task<IActionResult> PutJourneyAsync(int id, Journey journey)
     {
+        // If the id of the journey to update is different from the id of the journey in the body, return a bad request
         if (id != journey.Id)
         {
             return new BadRequestResult();
         }
-
+        
+        // If the journey is not valid, return a bad request
         if (ValidateJourney(journey) == false)
         {
             return new BadRequestResult();
@@ -335,21 +335,26 @@ public class JourneyService
     /// <summary>
     /// It takes a Journey object as a parameter, and returns a Journey object
     /// </summary>
-    /// <param name="Journey">The class that represents the data model for the Journey table in the
+    /// <param name="journey">The class that represents the data model for the Journey table in the
     /// database.</param>
+    /// <returns>A Journey object if the journey is valid, null otherwise.</returns>
     public static async Task<ActionResult<Journey>> PostJourneyAsync(Journey journey)
     {
+        // Check if the journey is valid
         if (ValidateJourney(journey) == false)
             return null!;
 
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
         {
             conn.Open();
+
+            // Get the last id from the database
             MySqlCommand lastId = new MySqlCommand(
                 "SELECT Id FROM Journeys ORDER BY Id DESC LIMIT 1",
                 conn
             );
 
+            // If there is a last id, increment it by 1, otherwise set it to 1
             using (MySqlDataReader reader = await lastId.ExecuteReaderAsync())
             {
                 if (await reader.ReadAsync())
@@ -357,7 +362,8 @@ public class JourneyService
                     journey.Id = reader.GetInt32("Id") + 1;
                 }
             }
-
+            
+            // Insert the journey into the database
             MySqlCommand cmd = new MySqlCommand(
                 "INSERT INTO Journeys (Id, DepartureTime, ReturnTime, DepartureStationId, DepartureStationName, ReturnStationId, ReturnStationName, CoveredDistance, Duration) VALUES (@id, @departureTime, @returnTime, @departureStationId, @departureStationName, @returnStationId, @returnStationName, @coveredDistance, @duration)",
                 conn
@@ -387,6 +393,7 @@ public class JourneyService
     /// It deletes a journey by id, and it's asynchronous
     /// </summary>
     /// <param name="id">The id of the journey to delete.</param>
+    /// <returns>OkResult</returns>
     public static async Task<IActionResult> DeleteJourneyAsync(int id)
     {
         using var conn = new MySqlConnection(MySQLHelper.connectionString);
