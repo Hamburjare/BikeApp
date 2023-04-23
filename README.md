@@ -29,7 +29,7 @@
     - [More](#more)
 
 ## Description
-This is a web app that displays bike journeys and bike station information in Helsinki. The app is built with React and .NET 6.0. The backend is a REST API that uses MariaDB as a database. The frontend is a single page application that uses Vite as a build tool and TailwindCSS as a CSS framework. The app is dockerized and can be run with single command. The app is deployed to Hetzner Cloud and can be accessed [here](https://bikeapp.hamburjare.tech/). The app is also protected with Cloudflare. If you wish to play with the backend, you can find the API documentation [here](https://backend.hamburjare.tech/swagger/index.html).
+This is a web app that displays bike journeys and bike station information in Helsinki. The app is built with React and .NET 6.0. The backend is a REST API that uses MariaDB as a database. The frontend is a single page application that uses Vite as a build tool and TailwindCSS as a CSS framework. The app is dockerized and can be run with single command. The app is deployed to Hetzner Cloud and can be accessed here <https://bikeapp.hamburjare.tech/>. The app is also protected with Cloudflare. If you wish to play with the backend, you can find the API documentation here <https://backend.hamburjare.tech/swagger/index.html>.
 
 ## Data
 The data that is used in this web app is owned by City Bike Finland.
