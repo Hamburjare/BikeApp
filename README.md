@@ -6,7 +6,6 @@
   - [Description](#description)
   - [Data](#data)
   - [Technologies](#technologies)
-    - [Cloud](#cloud)
     - [Backend](#backend)
     - [Frontend](#frontend)
   - [Configuration](#configuration)
@@ -42,10 +41,6 @@ Dataset for bike stations:
 * License and information: <https://www.avoindata.fi/data/en/dataset/hsl-n-kaupunkipyoraasemat/resource/a23eef3a-cc40-4608-8aa2-c730d17e8902>
 
 ## Technologies
-
-### Cloud
-* Hetzner Cloud - Cloud provider
-* Cloudflare Zero Trust - Security
 
 ### Backend
 * Docker - Containerization
